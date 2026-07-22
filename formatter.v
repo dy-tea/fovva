@@ -373,6 +373,7 @@ fn (mut ctx FormatContext) run() {
 				&& ctx.prev_tok.typ != .kw_for && ctx.prev_tok.typ != .kw_switch
 				&& ctx.prev_tok.typ != .kw_do && ctx.prev_tok.typ != .colon
 				&& ctx.prev_tok.typ != .comma && ctx.prev_tok.typ != .operator
+				&& ctx.prev_tok.typ != .lparen
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space {
@@ -546,7 +547,7 @@ fn (mut ctx FormatContext) run() {
 		ctx.id_at_line_start = tok.typ == .identifier && (was_line_start
 			|| ctx.prev_tok.typ in [.kw_static, .kw_extern, .kw_typedef, .kw_const, .kw_volatile]
 			|| (ctx.prev_tok.typ == .lparen
-			&& ctx.prev_prev_tok.typ !in [.kw_if, .kw_while, .kw_for, .kw_switch])
+			&& ctx.prev_prev_tok.typ !in [.kw_if, .kw_while, .kw_for, .kw_switch, .rparen])
 			|| (ctx.prev_tok.typ == .comma && ctx.paren_depth > 0))
 		ctx.line_start = false
 		ctx.advance(tok)

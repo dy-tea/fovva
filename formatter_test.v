@@ -421,6 +421,16 @@ fn test_standalone_line_comment() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_cast_arithmetic() {
+	input := 'void f(void) {
+	curve->baked[i].x = (float)(b0 * p0x + b1 * p1x);
+	float t = (float)((x - x0) / (x1 - x0));
+	}'
+	expected := 'void f(void) {\n\tcurve->baked[i].x = (float)(b0 * p0x + b1 * p1x);\n\tfloat t = (float)((x - x0) / (x1 - x0));\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_unary_at_line_start() {
 	input := 'void f(void) {
 	if (cond)
