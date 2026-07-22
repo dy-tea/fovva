@@ -356,6 +356,37 @@ fn test_static_ptr_decl() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_ternary_basic() {
+	input := 'void f(void) {
+	int x = a ? b : c;
+	}'
+	expected := 'void f(void) {\n\tint x = a ? b : c;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_ternary_complex() {
+	input := 'int g(void) {
+	int x = something() ? something() : 0;
+	int y = a ? &b : NULL;
+	int z = a ? *b : NULL;
+	int w = a ? b ? c : d : e;
+	}'
+	expected := 'int g(void) {\n\tint x = something() ? something() : 0;\n\tint y = a ? &b : NULL;\n\tint z = a ? *b : NULL;\n\tint w = a ? b ? c : d : e;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_comma_lparen() {
+	input := 'void f(void) {
+	printf("%d %s", x, (void *)ptr);
+	func(a, (int)b);
+	}'
+	expected := 'void f(void) {\n\tprintf("%d %s", x, (void *)ptr);\n\tfunc(a, (int)b);\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_control_flow_mult() {
 	input := 'void f(void) {
 	while (a * b) { body(); }

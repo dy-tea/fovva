@@ -363,7 +363,7 @@ fn (mut ctx FormatContext) run() {
 				&& ctx.prev_tok.typ != .kw_if && ctx.prev_tok.typ != .kw_while
 				&& ctx.prev_tok.typ != .kw_for && ctx.prev_tok.typ != .kw_switch
 				&& ctx.prev_tok.typ != .kw_do && ctx.prev_tok.typ != .colon
-				&& ctx.prev_tok.typ != .operator
+				&& ctx.prev_tok.typ != .comma && ctx.prev_tok.typ != .operator
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space {
@@ -457,7 +457,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.indent_lvl++
 				ctx.in_case = false
 			} else {
-				ctx.sb.write_string(':')
+				ctx.sb.write_string(' :')
 				ctx.line_start = false
 			}
 			ctx.advance(tok)
@@ -465,7 +465,7 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		if tok.typ == .question {
-			ctx.sb.write_string(' ? ')
+			ctx.sb.write_string(' ?')
 			ctx.line_start = false
 			ctx.advance(tok)
 			continue
@@ -606,8 +606,8 @@ fn (mut ctx FormatContext) write_indent() {
 }
 
 fn is_unary_prefix_ctx(prev TokenType) bool {
-	return prev in [.lparen, .lbracket, .comma, .operator, .colon, .question, .lbrace, .rbrace,
-		.kw_return, .kw_sizeof, .kw_case, .kw_default]
+	return prev in [.lparen, .lbracket, .comma, .operator, .lbrace, .rbrace, .kw_return, .kw_sizeof,
+		.kw_case, .kw_default]
 }
 
 fn is_unary_op_ctx(prev TokenType) bool {
@@ -656,6 +656,12 @@ fn needs_space_before(tok Token, prev Token) bool {
 		return true
 	}
 	if tok.typ == .identifier && prev.typ != .dot && prev.typ != .arrow {
+		return true
+	}
+	if prev.typ == .question && tok.typ != .semicolon {
+		return true
+	}
+	if prev.typ == .colon && tok.typ != .semicolon {
 		return true
 	}
 	return false
