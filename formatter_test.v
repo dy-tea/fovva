@@ -139,7 +139,7 @@ fn test_format_multiple_functions() {
 	void b(void) {
 	y();
 	}'
-	expected := 'void a(void) {\n\tx();\n}\nvoid b(void) {\n\ty();\n}\n'
+	expected := 'void a(void) {\n\tx();\n}\n\nvoid b(void) {\n\ty();\n}\n'
 	result := format(input, Config{})
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
@@ -183,7 +183,7 @@ fn test_format_struct_init() {
 
 	return 0;
 	}'
-	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nint main() {\n\tS s = {};\n\tS ss = {\n\t\t1,\n\t\t2\n\t};\n\tS sss = {\n\t\t.a = 1,\n\t\t.b = 2\n\t};\n\treturn 0;\n}\n'
+	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nint main() {\n\tS s = {};\n\tS ss = {\n\t\t1,\n\t\t2\n\t};\n\tS sss = {\n\t\t.a = 1,\n\t\t.b = 2\n\t};\n\n\treturn 0;\n}\n'
 	result := format(input, Config{})
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
@@ -198,6 +198,72 @@ fn test_format_struct_cast() {
 	.b = 0xb,
 	};'
 	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nS src = (struct S){\n\t.a = 0xa,\n\t.b = 0xb,\n};\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_pointer_basic() {
+	input := 'void f(void) {
+	int *p = NULL;
+	int **pp;
+	*p = 42;
+	int x = a * b;
+	int y = a & b;
+	int *q = &x;
+	f(&x, &y);
+	return *p;
+	}'
+	expected := 'void f(void) {\n\tint *p = NULL;\n\tint **pp;\n\t*p = 42;\n\tint x = a * b;\n\tint y = a & b;\n\tint *q = &x;\n\tf(&x, &y);\n\treturn *p;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_pointer_advanced() {
+	input := 'void f(void) {
+	struct foo *p = NULL;
+	T *q = NULL;
+	sizeof(*p);
+	void *ptr;
+	size_t s = sizeof(*p);
+	}'
+	expected := 'void f(void) {\n\tstruct foo *p = NULL;\n\tT *q = NULL;\n\tsizeof(*p);\n\tvoid *ptr;\n\tsize_t s = sizeof(*p);\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_pointer_params() {
+	input := 'void update(struct wlr_surface *sans) {
+	bool *flag;
+	int _unused_x, _unused_y;
+	if (sans != surface && wlr_scene_node_coords(&tree->node, &_unused_x)) {
+	inhibited = true;
+	}
+	}'
+	expected := 'void update(struct wlr_surface *sans) {\n\tbool *flag;\n\tint _unused_x, _unused_y;\n\tif (sans != surface && wlr_scene_node_coords(&tree->node, &_unused_x)) {\n\t\tinhibited = true;\n\t}\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_pointer_typedef() {
+	input := 'void handle_destroy(struct wl_listener *listener, void *data) {
+	(void)data;
+	MyType *idle = container_of(listener, idle, member);
+	free(idle);
+	}'
+	expected := 'void handle_destroy(struct wl_listener *listener, void *data) {\n\t(void)data;\n\tMyType *idle = container_of(listener, idle, member);\n\tfree(idle);\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_pointer_return_addr() {
+	input := 'int *f(int *p) {
+	return p;
+	}
+	int *g(int *p) {
+	int *q = &x;
+	return &x;
+	}'
+	expected := 'int *f(int *p) {\n\treturn p;\n}\n\nint *g(int *p) {\n\tint *q = &x;\n\treturn &x;\n}\n'
 	result := format(input, Config{})
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
