@@ -6,29 +6,30 @@ struct FormatContext {
 	config Config
 	tokens []Token
 mut:
-	sb               strings.Builder
-	indent_lvl       int
-	brace_depth      int
-	line_start       bool
-	prev_tok         Token
-	prev_prev_tok    Token
-	paren_depth      int
-	in_for           bool
-	in_case          bool
-	prev_newline     bool
-	skip_rbrace      bool
-	paren_cast       []bool
-	last_cast_paren  bool
-	next_is_struct   bool
-	struct_brace     []bool
-	init_brace       []bool
-	newline_count    int
-	id_at_line_start bool
-	last_was_cast    bool
-	wrote_blank_line bool
-	expect_body      bool
-	expect_control   bool
-	body_depth       int
+	sb                strings.Builder
+	indent_lvl        int
+	brace_depth       int
+	line_start        bool
+	prev_tok          Token
+	prev_prev_tok     Token
+	paren_depth       int
+	in_for            bool
+	in_case           bool
+	prev_newline      bool
+	skip_rbrace       bool
+	paren_cast        []bool
+	last_cast_paren   bool
+	next_is_struct    bool
+	struct_brace      []bool
+	init_brace        []bool
+	newline_count     int
+	id_at_line_start  bool
+	last_was_cast     bool
+	wrote_blank_line  bool
+	expect_body       bool
+	expect_control    bool
+	body_depth        int
+	inline_init_depth int
 }
 
 pub fn format(source string, cfg Config) string {
@@ -202,6 +203,14 @@ fn (mut ctx FormatContext) run() {
 				ctx.advance(tok)
 				continue
 			}
+			if ctx.inline_init_depth > 0 {
+				ctx.inline_init_depth--
+				if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
+				ctx.sb.write_string('}')
+				ctx.line_start = false
+				ctx.advance(tok)
+				continue
+			}
 			is_struct := if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() } else { false }
 			if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
 			ctx.next_is_struct = false
@@ -273,7 +282,7 @@ fn (mut ctx FormatContext) run() {
 			if !ctx.line_start {
 				if (ctx.prev_tok.typ == .rparen && !ctx.last_cast_paren)
 					|| ctx.prev_tok.typ == .identifier
-					|| ctx.prev_tok.typ == .kw_else || ctx.prev_tok.typ == .kw_do {
+					|| ctx.prev_tok.typ in [.kw_else, .kw_do, .kw_struct, .kw_union, .kw_enum] {
 					ctx.sb.write_string(' ')
 				}
 			}
@@ -282,6 +291,34 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string('{}')
 				ctx.skip_rbrace = true
 				ctx.line_start = false
+			} else if is_init && nop in [.number, .identifier, .string_lit, .char_lit] {
+				mut is_single := false
+				for j in i + 1 .. ctx.tokens.len {
+					t := ctx.tokens[j].typ
+					if t == .newline { continue
+					 }
+					if t in [.number, .identifier, .string_lit, .char_lit] {
+						for k in j + 1 .. ctx.tokens.len {
+							t2 := ctx.tokens[k].typ
+							if t2 == .newline { continue
+							 }
+							if t2 == .rbrace { is_single = true }
+							break
+						}
+					}
+					break
+				}
+				if is_single {
+					ctx.sb.write_string('{')
+					ctx.inline_init_depth++
+					ctx.line_start = false
+				} else {
+					ctx.sb.write_string('{')
+					ctx.indent_lvl++
+					ctx.brace_depth++
+					ctx.sb.write_string('\n')
+					ctx.line_start = true
+				}
 			} else {
 				ctx.sb.write_string('{')
 				ctx.indent_lvl++
@@ -634,7 +671,7 @@ fn is_word_type(t TokenType) bool {
 
 fn needs_space_before(tok Token, prev Token) bool {
 	if prev.typ == .eof || prev.typ == .newline || prev.typ == .lparen || prev.typ == .lbracket
-		|| prev.typ == .kw_return || prev.typ == .kw_sizeof {
+		|| prev.typ == .lbrace || prev.typ == .kw_return || prev.typ == .kw_sizeof {
 		return false
 	}
 	if tok.typ == .semicolon || tok.typ == .comma || tok.typ == .rparen || tok.typ == .rbracket {

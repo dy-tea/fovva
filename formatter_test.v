@@ -455,3 +455,57 @@ fn test_control_flow_mult() {
 	result := format(input, Config{})
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_typedef_struct_brace() {
+	input := 'typedef struct {
+	char strings[64];
+	size_t count;
+} foo;'
+	expected := 'typedef struct {\n\tchar strings[64];\n\tsize_t count;\n} foo;\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_typedef_union_brace() {
+	input := 'typedef union {
+	int i;
+	float f;
+} bar;'
+	expected := 'typedef union {\n\tint i;\n\tfloat f;\n} bar;\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_typedef_enum_brace() {
+	input := 'typedef enum { A, B } myenum;'
+	expected := 'typedef enum {\n\tA, B\n} myenum;\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_inline_init_zero() {
+	input := 'void f(void) {
+	int arr[] = {0};
+	}'
+	expected := 'void f(void) {\n\tint arr[] = {0};\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_inline_init_null() {
+	input := 'void f(void) {
+	char *s = {NULL};
+	}'
+	expected := 'void f(void) {\n\tchar *s = {NULL};\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_multi_element_init_expands() {
+	input := 'void f(void) {
+	int arr[] = {0, 1};
+	}'
+	expected := 'void f(void) {\n\tint arr[] = {\n\t\t0,\n\t\t1\n\t};\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
