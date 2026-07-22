@@ -25,6 +25,9 @@ mut:
 	id_at_line_start bool
 	last_was_cast    bool
 	wrote_blank_line bool
+	expect_body      bool
+	expect_control   bool
+	body_depth       int
 }
 
 pub fn format(source string, cfg Config) string {
@@ -153,6 +156,15 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string('\n')
 		}
 
+		if ctx.expect_body && tok.typ != .lbrace {
+			if !ctx.line_start {
+				ctx.sb.write_string('\n')
+			}
+			ctx.body_depth++
+			ctx.expect_body = false
+			ctx.line_start = true
+		}
+
 		if tok.typ == .line_comment {
 			ctx.write_newline()
 			ctx.write_indent()
@@ -218,6 +230,7 @@ fn (mut ctx FormatContext) run() {
 
 		if tok.typ == .semicolon {
 			ctx.next_is_struct = false
+			ctx.body_depth = 0
 			ctx.sb.write_string(';')
 			if ctx.in_for && ctx.paren_depth > 0 {
 				ctx.sb.write_string(' ')
@@ -236,6 +249,7 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		if tok.typ == .lbrace {
+			ctx.expect_body = false
 			is_struct_def := ctx.next_is_struct && (ctx.prev_tok.typ == .identifier
 				|| ctx.prev_tok.typ == .kw_struct || ctx.prev_tok.typ == .kw_union
 				|| ctx.prev_tok.typ == .kw_enum)
@@ -271,8 +285,8 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		if tok.typ in [.kw_if, .kw_while, .kw_for, .kw_switch] {
-			if !((tok.typ == .kw_while && ctx.prev_tok.typ == .rbrace)
-				|| ctx.prev_tok.typ == .kw_else) {
+			is_dowhile := tok.typ == .kw_while && ctx.prev_tok.typ == .rbrace
+			if !(is_dowhile || ctx.prev_tok.typ == .kw_else) {
 				ctx.write_newline()
 				ctx.write_indent()
 			}
@@ -282,6 +296,9 @@ fn (mut ctx FormatContext) run() {
 			ctx.prev_tok = tok
 			if tok.typ == .kw_for {
 				ctx.in_for = true
+			}
+			if !is_dowhile && tok.typ in [.kw_if, .kw_while, .kw_for] {
+				ctx.expect_control = true
 			}
 			continue
 		}
@@ -317,7 +334,12 @@ fn (mut ctx FormatContext) run() {
 				}
 			}
 
-			ctx.line_start = false
+			if nop != .lbrace && nop != .kw_if {
+				ctx.expect_body = true
+			}
+			if nop == .kw_if || nop == .lbrace {
+				ctx.line_start = false
+			}
 			ctx.prev_tok = tok
 			continue
 		}
@@ -362,6 +384,10 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string(')')
 			ctx.paren_depth--
 			if ctx.paren_depth <= 0 {
+				if ctx.expect_control {
+					ctx.expect_body = true
+					ctx.expect_control = false
+				}
 				ctx.in_for = false
 				if ctx.paren_depth < 0 { ctx.paren_depth = 0 }
 			}
@@ -451,13 +477,13 @@ fn (mut ctx FormatContext) run() {
 
 		if tok.typ == .operator {
 			is_binary := is_binary_op(tok.value)
-			is_star_amp := tok.value in ['*', '&']
-			is_struct_star := is_star_amp && ctx.prev_tok.typ == .identifier
+			can_be_unary := tok.value in ['*', '&', '+', '-', '~', '!']
+			is_struct_star := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& (ctx.next_is_struct || ctx.id_at_line_start)
 			space_before := !ctx.line_start && is_binary && !(ctx.prev_tok.typ == .operator
-				&& !is_binary_op(ctx.prev_tok.value)) && !(is_star_amp
+				&& !is_binary_op(ctx.prev_tok.value)) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ))
-			is_truly_binary := is_binary && (!is_star_amp || !is_unary_op_ctx(ctx.prev_tok.typ))
+			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
 				&& !is_struct_star
 			if ctx.line_start {
 				ctx.write_indent()
@@ -555,14 +581,11 @@ fn (mut ctx FormatContext) write_newline() {
 }
 
 fn (mut ctx FormatContext) write_indent() {
+	total := ctx.indent_lvl + ctx.body_depth
 	if ctx.config.indent_style == .tabs {
-		for _ in 0 .. ctx.indent_lvl {
-			ctx.sb.write_string('\t')
-		}
+		ctx.sb.write_string('\t'.repeat(total))
 	} else {
-		for _ in 0 .. ctx.indent_lvl * ctx.config.indent_width {
-			ctx.sb.write_string(' ')
-		}
+		ctx.sb.write_string(' '.repeat(total * ctx.config.indent_width))
 	}
 	ctx.line_start = false
 }
@@ -622,3 +645,4 @@ fn needs_space_before(tok Token, prev Token) bool {
 	}
 	return false
 }
+

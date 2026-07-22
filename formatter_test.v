@@ -267,3 +267,70 @@ fn test_pointer_return_addr() {
 	result := format(input, Config{})
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_if_without_braces() {
+	input := 'void f(void) {
+	if (cond) stmt;
+	}'
+	expected := 'void f(void) {\n\tif (cond)\n\t\tstmt;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_if_else_without_braces() {
+	input := 'void f(void) {
+	if (cond) stmt; else stmt2;
+	}'
+	expected := 'void f(void) {\n\tif (cond)\n\t\tstmt;\n\telse\n\t\tstmt2;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_else_if_naked() {
+	input := 'void f(void) {
+	if (a) stmt; else if (b) stmt2; else stmt3;
+	}'
+	expected := 'void f(void) {\n\tif (a)\n\t\tstmt;\n\telse if (b)\n\t\tstmt2;\n\telse\n\t\tstmt3;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_while_without_braces() {
+	input := 'void f(void) {
+	while (cond) stmt;
+	}'
+	expected := 'void f(void) {\n\twhile (cond)\n\t\tstmt;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_for_without_braces() {
+	input := 'void f(void) {
+	for (;;) stmt;
+	}'
+	expected := 'void f(void) {\n\tfor (; ; )\n\t\tstmt;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_nested_if_without_braces() {
+	input := 'void f(void) {
+	if (a) if (b) stmt;
+	}'
+	expected := 'void f(void) {\n\tif (a)\n\t\tif (b)\n\t\t\tstmt;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_unary_operators() {
+	input := 'int f(void) {
+	return -1;
+	int x = -y;
+	int z = +1;
+	int w = a - b;
+	int v = a + -b;
+	}'
+	expected := 'int f(void) {\n\treturn -1;\n\tint x = -y;\n\tint z = +1;\n\tint w = a - b;\n\tint v = a + -b;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
