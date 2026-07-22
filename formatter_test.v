@@ -387,6 +387,53 @@ fn test_comma_lparen() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_inline_comment_after_semicolon() {
+	input := 'void do_something(int *val) {
+	*val = 12;
+	}
+
+	int main() {
+	int a = 100;
+	do_something(&a); // inline comment explaining this
+	}'
+	expected := 'void do_something(int *val) {\n\t*val = 12;\n}\n\nint main() {\n\tint a = 100;\n\tdo_something(&a); // inline comment explaining this\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_inline_comment_after_return() {
+	input := 'void f(void) {
+	x = 1; // trailing comment
+	return; // return comment
+	}'
+	expected := 'void f(void) {\n\tx = 1; // trailing comment\n\treturn; // return comment\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_standalone_line_comment() {
+	input := 'void f(void) {
+	// standalone comment at block start
+	int x = 1;
+	}'
+	expected := 'void f(void) {\n\t// standalone comment at block start\n\tint x = 1;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_unary_at_line_start() {
+	input := 'void f(void) {
+	if (cond)
+	    *val = 12;
+	}
+	void g(void) {
+	*val = 42;
+	}'
+	expected := 'void f(void) {\n\tif (cond)\n\t\t*val = 12;\n}\n\nvoid g(void) {\n\t*val = 42;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_control_flow_mult() {
 	input := 'void f(void) {
 	while (a * b) { body(); }

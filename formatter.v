@@ -167,8 +167,11 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		if tok.typ == .line_comment {
-			ctx.write_newline()
-			ctx.write_indent()
+			if ctx.line_start {
+				ctx.write_indent()
+			} else {
+				ctx.sb.write_string(' ')
+			}
 			ctx.sb.write_string(tok.value)
 			ctx.sb.write_string('\n')
 			ctx.line_start = true
@@ -213,6 +216,8 @@ fn (mut ctx FormatContext) run() {
 				ctx.line_start = false
 			} else if nop == .identifier && is_struct {
 				ctx.line_start = false
+			} else if nop == .line_comment {
+				ctx.line_start = false
 			} else if nop == .kw_else || nop == .kw_while || nop == .dot || nop == .arrow
 				|| nop == .operator || nop == .lparen || nop == .lbracket {
 				ctx.sb.write_string(' ')
@@ -237,13 +242,17 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			} else {
 				nop := ctx.peek(i)
-				mut sep := '\n'
-				if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
-					sep = '\n\n'
-					ctx.wrote_blank_line = true
+				if nop == .line_comment {
+					ctx.line_start = false
+				} else {
+					mut sep := '\n'
+					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
+						sep = '\n\n'
+						ctx.wrote_blank_line = true
+					}
+					ctx.sb.write_string(sep)
+					ctx.line_start = true
 				}
-				ctx.sb.write_string(sep)
-				ctx.line_start = true
 			}
 			ctx.advance(tok)
 			continue
@@ -490,7 +499,7 @@ fn (mut ctx FormatContext) run() {
 				&& !is_binary_op(ctx.prev_tok.value)) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ))
 			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
-				&& !is_struct_star
+				&& !is_struct_star && !(ctx.line_start && can_be_unary)
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space_before {
