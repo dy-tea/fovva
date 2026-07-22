@@ -334,3 +334,36 @@ fn test_unary_operators() {
 	result := format(input, Config{})
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_macro_body_indent() {
+	input := 'void f(void) {
+	wl_list_for_each(entry, &list, link)
+	if (cond)
+	    stmt;
+	}'
+	expected := 'void f(void) {\n\twl_list_for_each(entry, &list, link)\n\t\tif (cond)\n\t\t\tstmt;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_static_ptr_decl() {
+	input := 'static mytype *q = NULL;
+	void f(mytype *p) {}
+	mytype *r;
+	void g(struct S *s) {}'
+	expected := 'static mytype *q = NULL;\nvoid f(mytype *p) {} mytype * r;\nvoid g(struct S *s) {}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_control_flow_mult() {
+	input := 'void f(void) {
+	while (a * b) { body(); }
+	if (a * b) { body(); }
+	for (a * b; ;) { body(); }
+	int x = a * b;
+	}'
+	expected := 'void f(void) {\n\twhile (a * b) {\n\t\tbody();\n\t}\n\tif (a * b) {\n\t\tbody();\n\t}\n\tfor (a * b; ; ) {\n\t\tbody();\n\t}\n\tint x = a * b;\n}\n'
+	result := format(input, Config{})
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

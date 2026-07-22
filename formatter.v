@@ -11,6 +11,7 @@ mut:
 	brace_depth      int
 	line_start       bool
 	prev_tok         Token
+	prev_prev_tok    Token
 	paren_depth      int
 	in_for           bool
 	in_case          bool
@@ -171,7 +172,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string(tok.value)
 			ctx.sb.write_string('\n')
 			ctx.line_start = true
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -188,14 +189,14 @@ fn (mut ctx FormatContext) run() {
 			} else {
 				ctx.line_start = false
 			}
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
 		if tok.typ == .rbrace {
 			if ctx.skip_rbrace {
 				ctx.skip_rbrace = false
-				ctx.prev_tok = tok
+				ctx.advance(tok)
 				continue
 			}
 			is_struct := if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() } else { false }
@@ -224,7 +225,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			}
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -244,7 +245,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(sep)
 				ctx.line_start = true
 			}
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -280,7 +281,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.line_start = true
 			}
 			ctx.last_cast_paren = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -293,7 +294,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string(tok.value)
 			ctx.sb.write_string(' ')
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			if tok.typ == .kw_for {
 				ctx.in_for = true
 			}
@@ -312,7 +313,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			}
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -340,7 +341,7 @@ fn (mut ctx FormatContext) run() {
 			if nop == .kw_if || nop == .lbrace {
 				ctx.line_start = false
 			}
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -349,7 +350,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.write_indent()
 			ctx.sb.write_string('do')
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -375,7 +376,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string('(')
 			ctx.paren_depth++
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -387,6 +388,11 @@ fn (mut ctx FormatContext) run() {
 				if ctx.expect_control {
 					ctx.expect_body = true
 					ctx.expect_control = false
+				} else {
+					nop := ctx.peek(i)
+					if nop in [.kw_if, .kw_while, .kw_for, .kw_switch, .kw_do, .lbrace] {
+						ctx.expect_body = true
+					}
 				}
 				ctx.in_for = false
 				if ctx.paren_depth < 0 { ctx.paren_depth = 0 }
@@ -397,7 +403,7 @@ fn (mut ctx FormatContext) run() {
 			}
 			ctx.last_was_cast = ctx.last_cast_paren
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -414,7 +420,7 @@ fn (mut ctx FormatContext) run() {
 				}
 				ctx.line_start = false
 			}
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -425,7 +431,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string('case ')
 			ctx.line_start = false
 			ctx.in_case = true
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -440,7 +446,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			}
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -454,14 +460,14 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(':')
 				ctx.line_start = false
 			}
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
 		if tok.typ == .question {
 			ctx.sb.write_string(' ? ')
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -471,7 +477,7 @@ fn (mut ctx FormatContext) run() {
 			}
 			ctx.sb.write_string(tok.value)
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -495,7 +501,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			}
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -505,14 +511,14 @@ fn (mut ctx FormatContext) run() {
 			}
 			ctx.sb.write_string('[')
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
 		if tok.typ == .rbracket {
 			ctx.sb.write_string(']')
 			ctx.line_start = false
-			ctx.prev_tok = tok
+			ctx.advance(tok)
 			continue
 		}
 
@@ -528,14 +534,23 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		ctx.sb.write_string(tok.value)
-		ctx.id_at_line_start = tok.typ == .identifier && was_line_start
+		ctx.id_at_line_start = tok.typ == .identifier && (was_line_start
+			|| ctx.prev_tok.typ in [.kw_static, .kw_extern, .kw_typedef, .kw_const, .kw_volatile]
+			|| (ctx.prev_tok.typ == .lparen
+			&& ctx.prev_prev_tok.typ !in [.kw_if, .kw_while, .kw_for, .kw_switch])
+			|| (ctx.prev_tok.typ == .comma && ctx.paren_depth > 0))
 		ctx.line_start = false
-		ctx.prev_tok = tok
+		ctx.advance(tok)
 	}
 
 	if !ctx.line_start {
 		ctx.sb.write_string('\n')
 	}
+}
+
+fn (mut ctx FormatContext) advance(tok Token) {
+	ctx.prev_prev_tok = ctx.prev_tok
+	ctx.prev_tok = tok
 }
 
 fn (ctx &FormatContext) peek(i int) TokenType {
@@ -569,7 +584,7 @@ fn (mut ctx FormatContext) pp_tok(tok Token, _ int) bool {
 		ctx.sb.write_string('\n')
 	}
 	ctx.line_start = true
-	ctx.prev_tok = tok
+	ctx.advance(tok)
 	return true
 }
 
@@ -645,4 +660,3 @@ fn needs_space_before(tok Token, prev Token) bool {
 	}
 	return false
 }
-
