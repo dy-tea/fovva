@@ -12,14 +12,14 @@ fn test_format_basic_if_else() {
 	}
 	}'
 	expected := 'void f(void) {\n\tif (condition1) {\n\t\tdo_thing1();\n\t}\n\tif (condition2) {\n\t\tdo_thing2();\n\t} else {\n\t\tdo_thing3();\n\t}\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
 fn test_format_indentation() {
 	input := 'int main(void) {\nreturn 0;\n}\n'
 	expected := 'int main(void) {\n\treturn 0;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected
 }
 
@@ -30,7 +30,7 @@ fn test_format_nested_blocks() {
 	x();
 	}}}'
 	expected := 'void f(void) {\n\tif (a) {\n\t\tif (b) {\n\t\t\tx();\n\t\t}\n\t}\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -45,7 +45,7 @@ fn test_format_switch_case() {
 	}
 	}'
 	expected := 'int main(void) {\n\tswitch (x) {\n\tcase 1:\n\t\tdo_thing();\n\t\tbreak;\n\tdefault:\n\t\tdo_default();\n\t}\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -67,7 +67,7 @@ fn test_format_for_loop() {
 	for(i=0;i<10;i++) {
 	work();}}'
 	expected := 'void f(void) {\n\tfor (i = 0; i < 10; i++) {\n\t\twork();\n\t}\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -119,7 +119,7 @@ fn test_format_no_sort_includes() {
 }
 
 fn test_format_empty_input() {
-	result := format('', Config{})
+	result := format('')
 	assert result == '\n' || result == ''
 }
 
@@ -128,7 +128,7 @@ fn test_format_return_statement() {
 	return 42;
 	}'
 	expected := 'int f(void) {\n\treturn 42;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -140,7 +140,7 @@ fn test_format_multiple_functions() {
 	y();
 	}'
 	expected := 'void a(void) {\n\tx();\n}\n\nvoid b(void) {\n\ty();\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -151,7 +151,7 @@ fn test_format_do_while() {
 	} while(cond);
 	}'
 	expected := 'void f(void) {\n\tdo {\n\t\tx();\n\t} while (cond);\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -166,7 +166,7 @@ fn test_format_else_if() {
 	z();
 	}}'
 	expected := 'void f(void) {\n\tif (a) {\n\t\tx();\n\t} else if (b) {\n\t\ty();\n\t} else {\n\t\tz();\n\t}\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -184,7 +184,7 @@ fn test_format_struct_init() {
 	return 0;
 	}'
 	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nint main() {\n\tS s = {};\n\tS ss = {\n\t\t1,\n\t\t2\n\t};\n\tS sss = {\n\t\t.a = 1,\n\t\t.b = 2\n\t};\n\n\treturn 0;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -198,7 +198,7 @@ fn test_format_struct_cast() {
 	.b = 0xb,
 	};'
 	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nS src = (struct S){\n\t.a = 0xa,\n\t.b = 0xb,\n};\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -214,7 +214,7 @@ fn test_pointer_basic() {
 	return *p;
 	}'
 	expected := 'void f(void) {\n\tint *p = NULL;\n\tint **pp;\n\t*p = 42;\n\tint x = a * b;\n\tint y = a & b;\n\tint *q = &x;\n\tf(&x, &y);\n\treturn *p;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -227,7 +227,7 @@ fn test_pointer_advanced() {
 	size_t s = sizeof(*p);
 	}'
 	expected := 'void f(void) {\n\tstruct foo *p = NULL;\n\tT *q = NULL;\n\tsizeof(*p);\n\tvoid *ptr;\n\tsize_t s = sizeof(*p);\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -240,7 +240,7 @@ fn test_pointer_params() {
 	}
 	}'
 	expected := 'void update(struct wlr_surface *sans) {\n\tbool *flag;\n\tint _unused_x, _unused_y;\n\tif (sans != surface && wlr_scene_node_coords(&tree->node, &_unused_x)) {\n\t\tinhibited = true;\n\t}\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -251,7 +251,7 @@ fn test_pointer_typedef() {
 	free(idle);
 	}'
 	expected := 'void handle_destroy(struct wl_listener *listener, void *data) {\n\t(void)data;\n\tMyType *idle = container_of(listener, idle, member);\n\tfree(idle);\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -264,7 +264,7 @@ fn test_pointer_return_addr() {
 	return &x;
 	}'
 	expected := 'int *f(int *p) {\n\treturn p;\n}\n\nint *g(int *p) {\n\tint *q = &x;\n\treturn &x;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -273,7 +273,7 @@ fn test_if_without_braces() {
 	if (cond) stmt;
 	}'
 	expected := 'void f(void) {\n\tif (cond)\n\t\tstmt;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -282,7 +282,7 @@ fn test_if_else_without_braces() {
 	if (cond) stmt; else stmt2;
 	}'
 	expected := 'void f(void) {\n\tif (cond)\n\t\tstmt;\n\telse\n\t\tstmt2;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -291,7 +291,7 @@ fn test_else_if_naked() {
 	if (a) stmt; else if (b) stmt2; else stmt3;
 	}'
 	expected := 'void f(void) {\n\tif (a)\n\t\tstmt;\n\telse if (b)\n\t\tstmt2;\n\telse\n\t\tstmt3;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -300,7 +300,7 @@ fn test_while_without_braces() {
 	while (cond) stmt;
 	}'
 	expected := 'void f(void) {\n\twhile (cond)\n\t\tstmt;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -309,7 +309,7 @@ fn test_for_without_braces() {
 	for (;;) stmt;
 	}'
 	expected := 'void f(void) {\n\tfor (; ; )\n\t\tstmt;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -318,7 +318,7 @@ fn test_nested_if_without_braces() {
 	if (a) if (b) stmt;
 	}'
 	expected := 'void f(void) {\n\tif (a)\n\t\tif (b)\n\t\t\tstmt;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -331,7 +331,7 @@ fn test_unary_operators() {
 	int v = a + -b;
 	}'
 	expected := 'int f(void) {\n\treturn -1;\n\tint x = -y;\n\tint z = +1;\n\tint w = a - b;\n\tint v = a + -b;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -342,7 +342,7 @@ fn test_macro_body_indent() {
 	    stmt;
 	}'
 	expected := 'void f(void) {\n\twl_list_for_each(entry, &list, link)\n\t\tif (cond)\n\t\t\tstmt;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -352,7 +352,7 @@ fn test_static_ptr_decl() {
 	mytype *r;
 	void g(struct S *s) {}'
 	expected := 'static mytype *q = NULL;\nvoid f(mytype *p) {} mytype * r;\nvoid g(struct S *s) {}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -361,7 +361,7 @@ fn test_ternary_basic() {
 	int x = a ? b : c;
 	}'
 	expected := 'void f(void) {\n\tint x = a ? b : c;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -373,7 +373,7 @@ fn test_ternary_complex() {
 	int w = a ? b ? c : d : e;
 	}'
 	expected := 'int g(void) {\n\tint x = something() ? something() : 0;\n\tint y = a ? &b : NULL;\n\tint z = a ? *b : NULL;\n\tint w = a ? b ? c : d : e;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -383,7 +383,7 @@ fn test_comma_lparen() {
 	func(a, (int)b);
 	}'
 	expected := 'void f(void) {\n\tprintf("%d %s", x, (void *)ptr);\n\tfunc(a, (int)b);\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -397,7 +397,7 @@ fn test_inline_comment_after_semicolon() {
 	do_something(&a); // inline comment explaining this
 	}'
 	expected := 'void do_something(int *val) {\n\t*val = 12;\n}\n\nint main() {\n\tint a = 100;\n\tdo_something(&a); // inline comment explaining this\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -407,7 +407,7 @@ fn test_inline_comment_after_return() {
 	return; // return comment
 	}'
 	expected := 'void f(void) {\n\tx = 1; // trailing comment\n\treturn; // return comment\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -417,7 +417,7 @@ fn test_standalone_line_comment() {
 	int x = 1;
 	}'
 	expected := 'void f(void) {\n\t// standalone comment at block start\n\tint x = 1;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -427,7 +427,7 @@ fn test_cast_arithmetic() {
 	float t = (float)((x - x0) / (x1 - x0));
 	}'
 	expected := 'void f(void) {\n\tcurve->baked[i].x = (float)(b0 * p0x + b1 * p1x);\n\tfloat t = (float)((x - x0) / (x1 - x0));\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -440,7 +440,7 @@ fn test_unary_at_line_start() {
 	*val = 42;
 	}'
 	expected := 'void f(void) {\n\tif (cond)\n\t\t*val = 12;\n}\n\nvoid g(void) {\n\t*val = 42;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -452,7 +452,7 @@ fn test_control_flow_mult() {
 	int x = a * b;
 	}'
 	expected := 'void f(void) {\n\twhile (a * b) {\n\t\tbody();\n\t}\n\tif (a * b) {\n\t\tbody();\n\t}\n\tfor (a * b; ; ) {\n\t\tbody();\n\t}\n\tint x = a * b;\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -462,7 +462,7 @@ fn test_typedef_struct_brace() {
 	size_t count;
 } foo;'
 	expected := 'typedef struct {\n\tchar strings[64];\n\tsize_t count;\n} foo;\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -472,14 +472,14 @@ fn test_typedef_union_brace() {
 	float f;
 } bar;'
 	expected := 'typedef union {\n\tint i;\n\tfloat f;\n} bar;\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
 fn test_typedef_enum_brace() {
 	input := 'typedef enum { A, B } myenum;'
 	expected := 'typedef enum {\n\tA, B\n} myenum;\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -488,7 +488,7 @@ fn test_inline_init_zero() {
 	int arr[] = {0};
 	}'
 	expected := 'void f(void) {\n\tint arr[] = {0};\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -497,7 +497,7 @@ fn test_inline_init_null() {
 	char *s = {NULL};
 	}'
 	expected := 'void f(void) {\n\tchar *s = {NULL};\n}\n'
-	result := format(input, Config{})
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
@@ -506,6 +506,21 @@ fn test_multi_element_init_expands() {
 	int arr[] = {0, 1};
 	}'
 	expected := 'void f(void) {\n\tint arr[] = {\n\t\t0,\n\t\t1\n\t};\n}\n'
-	result := format(input, Config{})
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_comment_between_structs() {
+	input := 'struct Struct {
+	int a;
+	int b;
+	}
+
+	// comment about AnotherStruct
+	struct AnotherStruct {
+	int b;
+	}'
+	expected := 'struct Struct {\n\tint a;\n\tint b;\n}\n\n// comment about AnotherStruct\nstruct AnotherStruct {\n\tint b;\n}\n'
+	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }

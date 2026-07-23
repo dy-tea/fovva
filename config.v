@@ -5,6 +5,7 @@ enum IndentStyle {
 	spaces
 }
 
+@[params]
 struct Config {
 	max_line_len  int         = 100
 	sort_includes bool        = true

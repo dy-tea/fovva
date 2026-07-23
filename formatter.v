@@ -225,7 +225,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.line_start = false
 			} else if nop == .identifier && is_struct {
 				ctx.line_start = false
-			} else if nop == .line_comment {
+			} else if nop == .line_comment && ctx.indent_lvl > 0 {
 				ctx.line_start = false
 			} else if nop == .kw_else || nop == .kw_while || nop == .dot || nop == .arrow
 				|| nop == .operator || nop == .lparen || nop == .lbracket {
@@ -251,7 +251,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			} else {
 				nop := ctx.peek(i)
-				if nop == .line_comment {
+				if nop == .line_comment && ctx.indent_lvl > 0 {
 					ctx.line_start = false
 				} else {
 					mut sep := '\n'
