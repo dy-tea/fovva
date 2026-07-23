@@ -618,3 +618,22 @@ fn test_string_not_broken_by_line_breaker() {
 		}
 	}
 }
+
+fn test_comment_long_lines_preserve_syntax() {
+	input := '// Error a a fugit voluptas ab repellendus corporis. Dolor debitis est quia quia sapiente.
+// Officiis et numquam quis inventore assumenda blanditiis eligendi alias. Tenetur unde inventore error facilis maiores non eum sapiente.
+'
+	cfg := Config{
+		max_line_len: 60
+	}
+	result := format(input, cfg)
+	lines := result.split('\n')
+	for line in lines {
+		if line.len > 0 {
+			trimmed := line.trim_space()
+			if trimmed.len > 0 && !trimmed.starts_with('//') {
+				assert false, 'comment continuation missing //: \'${line}\''
+			}
+		}
+	}
+}

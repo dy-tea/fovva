@@ -63,6 +63,13 @@ fn break_long_lines(text string, cfg Config) string {
 			continue
 		}
 		prefix := leading_whitespace_len(line)
+		trimmed := line.trim_space()
+		is_comment := trimmed.starts_with('//')
+		comment_prefix := if is_comment {
+			line[..prefix] + '// '
+		} else {
+			''
+		}
 		continuation_indent := calc_cont_indent(line, prefix, cfg)
 		cont_str := match cfg.indent_style {
 			.tabs {
@@ -80,7 +87,11 @@ fn break_long_lines(text string, cfg Config) string {
 				break
 			}
 			result << remaining[..best_pos]
-			remaining = cont_str + remaining[best_pos..].trim_left(' ')
+			if is_comment {
+				remaining = comment_prefix + remaining[best_pos..].trim_left(' ')
+			} else {
+				remaining = cont_str + remaining[best_pos..].trim_left(' ')
+			}
 		}
 		result << remaining
 	}
