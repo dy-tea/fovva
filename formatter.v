@@ -467,8 +467,8 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			}
 			outer_cast := ctx.paren_cast.len > 0 && ctx.paren_cast[ctx.paren_cast.len - 1]
-			is_cast := outer_cast
-				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .kw_return, .kw_sizeof, .kw_case, .kw_default]
+			is_cast := (outer_cast && ctx.prev_tok.typ != .kw_sizeof)
+				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .kw_return, .kw_case, .kw_default]
 			ctx.paren_cast << is_cast
 			ctx.paren_func_call << (ctx.prev_tok.typ == .identifier)
 			ctx.sb.write_string('(')
@@ -588,11 +588,13 @@ fn (mut ctx FormatContext) run() {
 				&& (ctx.next_is_struct || ctx.id_at_line_start)
 			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
+			is_cast_rparen := ctx.last_was_cast && ctx.prev_tok.typ == .rparen && can_be_unary
 			space_before := !ctx.line_start && is_binary && !(ctx.prev_tok.typ == .operator
 				&& !is_binary_op(ctx.prev_tok.value) && can_be_unary) && !(can_be_unary
-				&& is_unary_prefix_ctx(ctx.prev_tok.typ))
+				&& is_unary_prefix_ctx(ctx.prev_tok.typ)) && !is_cast_rparen
 			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
 				&& !is_struct_star && !is_ptr_dec && !(ctx.line_start && can_be_unary)
+				&& !is_cast_rparen
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space_before {

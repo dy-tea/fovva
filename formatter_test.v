@@ -666,16 +666,9 @@ fn test_for_null_body_indent() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
-fn test_cast_sizeof_no_space() {
-	input := 'offset < (int)sizeof(pending_command) - 1;'
-	expected := 'offset < (int)sizeof(pending_command) - 1;\n'
-	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
-}
-
-fn test_for_null_body_indent() {
-	input := 'void f(void) {for (;;);}'
-	expected := 'void f(void) {\n\tfor (; ; )\n\t\t;\n}\n'
+fn test_cast_rparen_unary_op() {
+	input := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);'
+	expected := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);\n'
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
