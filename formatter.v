@@ -87,11 +87,23 @@ fn break_long_lines(text string, cfg Config) string {
 	return result.join('\n')
 }
 
+fn pos_in_string(line string, pos int) bool {
+	mut in_str := false
+	for i := 0; i < pos; i++ {
+		if line[i] == `"` && !(i > 0 && line[i - 1] == `\\`) {
+			in_str = !in_str
+		}
+	}
+	return in_str
+}
+
 fn find_break_pos(line string, prefix_len int, max_len int) int {
 	end := if max_len < line.len { max_len } else { line.len - 1 }
 	mut best_op := -1
 	mut best_space := -1
 	for pos := end; pos > prefix_len; pos-- {
+		if pos_in_string(line, pos) { continue
+		 }
 		if pos + 1 < line.len {
 			if line[pos] == `,` && line[pos + 1] == ` ` {
 				return pos + 1

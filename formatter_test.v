@@ -591,3 +591,30 @@ fn test_struct_array_init() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_string_not_broken_by_line_breaker() {
+	input := 'void f(void) {
+	offset += snprintf(buf, sizeof(buf),
+	"    {\\"name\\": \\"%s\\", \\"id\\": %u, \\"rect\\": {\\"x\\": %d, \\"y\\": %d, \\"width\\": %d, \\"height\\": %d}}",
+	m->name, m->id);
+}
+'
+	cfg := Config{
+		max_line_len: 60
+	}
+	result := format(input, cfg)
+	lines := result.split('\n')
+	for line in lines {
+		mut in_str := false
+		mut i := 0
+		for i < line.len {
+			if line[i] == `"` && !(i > 0 && line[i - 1] == `\\`) {
+				in_str = !in_str
+			}
+			i++
+		}
+		if in_str {
+			assert false, 'line has unbalanced quotes: \'${line}\''
+		}
+	}
+}
