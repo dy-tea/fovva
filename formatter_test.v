@@ -431,6 +431,15 @@ fn test_cast_arithmetic() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_cast_mult_after_rparen() {
+	input := 'void f(void) {
+	float x = (float)(a) * 16;
+	}'
+	expected := 'void f(void) {\n\tfloat x = (float)(a) * 16;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_unary_at_line_start() {
 	input := 'void f(void) {
 	if (cond)

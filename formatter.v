@@ -596,7 +596,9 @@ fn (mut ctx FormatContext) run() {
 				&& (ctx.next_is_struct || ctx.id_at_line_start)
 			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
+			nop := ctx.peek(i)
 			is_cast_rparen := ctx.last_was_cast && ctx.prev_tok.typ == .rparen && can_be_unary
+				&& nop !in [.number, .string_lit, .char_lit]
 			space_before := !ctx.line_start && is_binary && !(ctx.prev_tok.typ == .operator
 				&& !is_binary_op(ctx.prev_tok.value) && can_be_unary) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ)) && !is_cast_rparen
