@@ -638,6 +638,20 @@ fn test_comment_long_lines_preserve_syntax() {
 	}
 }
 
+fn test_binary_and_spacing() {
+	input := 'if (!(mask&WL_EVENT_READABLE))return 0;'
+	expected := 'if (!(mask & WL_EVENT_READABLE))\n\treturn 0;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_post_decrement_assignment() {
+	input := "*end--='\\0';"
+	expected := "*end-- = '\\0';\n"
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_comment_after_semicolon_separate_line() {
 	input := 'void f(void) {
 	int x = 1;
