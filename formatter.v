@@ -528,12 +528,11 @@ fn (mut ctx FormatContext) run() {
 			nop := ctx.peek(i)
 			in_init_brace := ctx.init_brace.len > 0 && ctx.init_brace.last()
 			in_enum_brace := ctx.enum_brace.len > 0 && ctx.enum_brace.last()
-			if (ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0)
-				|| (in_enum_brace && nop != .rbrace) {
+			if (ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0) || in_enum_brace {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			} else {
-				if nop != .rparen && nop != .eof {
+				if nop !in [.rparen, .rbrace, .eof] {
 					ctx.sb.write_string(' ')
 				}
 				ctx.line_start = false

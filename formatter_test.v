@@ -504,6 +504,15 @@ fn test_typedef_enum_brace() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_enum_trailing_comma() {
+	input := 'typedef enum {
+	A, B,
+} myenum;'
+	expected := 'typedef enum {\n\tA,\n\tB,\n} myenum;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_inline_init_zero() {
 	input := 'void f(void) {
 	int arr[] = {0};
