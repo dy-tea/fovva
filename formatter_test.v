@@ -673,6 +673,13 @@ fn test_cast_rparen_unary_op() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_nested_init_brace_indent() {
+	input := 'Foo arr[2] = {{.sType = A,.stage = B,},{.sType = C,.stage = D,},};'
+	expected := 'Foo arr[2] = {\n\t{\n\t\t.sType = A,\n\t\t.stage = B,\n\t},\n\t{\n\t\t.sType = C,\n\t\t.stage = D,\n\t},\n};\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_comment_after_semicolon_separate_line() {
 	input := 'void f(void) {
 	int x = 1;

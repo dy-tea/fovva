@@ -363,6 +363,9 @@ fn (mut ctx FormatContext) run() {
 					ctx.inline_init_depth++
 					ctx.line_start = false
 				} else {
+					if ctx.line_start {
+						ctx.write_indent()
+					}
 					ctx.sb.write_string('{')
 					ctx.indent_lvl++
 					ctx.brace_depth++
@@ -370,6 +373,9 @@ fn (mut ctx FormatContext) run() {
 					ctx.line_start = true
 				}
 			} else {
+				if ctx.line_start {
+					ctx.write_indent()
+				}
 				ctx.sb.write_string('{')
 				ctx.indent_lvl++
 				ctx.brace_depth++
