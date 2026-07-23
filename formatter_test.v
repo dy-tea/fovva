@@ -652,6 +652,34 @@ fn test_post_decrement_assignment() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_cast_sizeof_no_space() {
+	input := 'offset < (int)sizeof(pending_command) - 1;'
+	expected := 'offset < (int)sizeof(pending_command) - 1;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_for_null_body_indent() {
+	input := 'void f(void) {for (;;);}'
+	expected := 'void f(void) {\n\tfor (; ; )\n\t\t;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_cast_sizeof_no_space() {
+	input := 'offset < (int)sizeof(pending_command) - 1;'
+	expected := 'offset < (int)sizeof(pending_command) - 1;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_for_null_body_indent() {
+	input := 'void f(void) {for (;;);}'
+	expected := 'void f(void) {\n\tfor (; ; )\n\t\t;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_comment_after_semicolon_separate_line() {
 	input := 'void f(void) {
 	int x = 1;

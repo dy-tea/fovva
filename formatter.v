@@ -275,6 +275,9 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		if tok.typ == .semicolon {
+			if ctx.line_start {
+				ctx.write_indent()
+			}
 			ctx.next_is_struct = false
 			if !(ctx.in_for && ctx.paren_depth > 0) {
 				ctx.body_depth = 0
@@ -755,7 +758,8 @@ fn needs_space_before(tok Token, prev Token) bool {
 	if prev.typ == .identifier && tok.typ == .lparen {
 		return false
 	}
-	if prev.typ == .rparen && (tok.typ == .lparen || tok.typ == .identifier) {
+	if prev.typ == .rparen
+		&& (tok.typ == .lparen || tok.typ == .identifier || tok.typ == .kw_sizeof) {
 		return false
 	}
 	if is_word_type(prev.typ) && is_word_type(tok.typ) {
