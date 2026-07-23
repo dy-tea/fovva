@@ -265,6 +265,11 @@ pub fn tokenize(source string) []Token {
 					pos++
 					col++
 				}
+				for pos < n && (source[pos] == `u` || source[pos] == `U`
+					|| source[pos] == `l` || source[pos] == `L`) {
+					pos++
+					col++
+				}
 			} else {
 				for pos < n && is_digit(source[pos]) {
 					pos++

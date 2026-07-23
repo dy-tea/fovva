@@ -49,6 +49,16 @@ fn test_tokenize_numbers() {
 	assert tokens[2].value == '3.14'
 }
 
+fn test_tokenize_hex_suffix() {
+	tokens := tokenize('0xFFFFFFFFu 0xFFUL 0x1UL')
+	assert tokens[0].typ == .number
+	assert tokens[0].value == '0xFFFFFFFFu'
+	assert tokens[1].typ == .number
+	assert tokens[1].value == '0xFFUL'
+	assert tokens[2].typ == .number
+	assert tokens[2].value == '0x1UL'
+}
+
 fn test_tokenize_operators() {
 	tokens := tokenize('== != <= >= && || ++ -- ->')
 	mut op_count := 0
