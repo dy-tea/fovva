@@ -542,3 +542,52 @@ fn test_macro_loop_body() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_nested_for_without_braces() {
+	input := 'static void tabs_rebuild_all(void) {
+	for (output_t *m = mon_head; m; m = m->next)
+		for (desktop_t *d = m->desk; d; d = d->next)
+			if (d->root)
+				tabs_rebuild(d->root);
+}
+'
+	expected := 'static void tabs_rebuild_all(void) {\n\tfor (output_t *m = mon_head; m; m = m->next)\n\t\tfor (desktop_t *d = m->desk; d; d = d->next)\n\t\t\tif (d->root)\n\t\t\t\ttabs_rebuild(d->root);\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_switch_case_indent() {
+	input := 'switch (decoration_mode) {
+case DECORATION_NONE:
+    mode_str = "none\\n";
+    break;
+case DECORATION_TABS:
+    mode_str = "tabs\\n";
+    break;
+case DECORATION_ALWAYS:
+    mode_str = "always\\n";
+    break;
+case DECORATION_CSD:
+    mode_str = "csd\\n";
+    break;
+}
+'
+	expected := 'switch (decoration_mode) {\ncase DECORATION_NONE:\n\tmode_str = "none\\n";\n\tbreak;\ncase DECORATION_TABS:\n\tmode_str = "tabs\\n";\n\tbreak;\ncase DECORATION_ALWAYS:\n\tmode_str = "always\\n";\n\tbreak;\ncase DECORATION_CSD:\n\tmode_str = "csd\\n";\n\tbreak;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_struct_array_init() {
+	input := 'static const tab_cfg_t tab_colors[] = {
+    {"bar_bg", color_bar_bg},
+    {"bg", color_tab_bg},
+    {"bg_active", color_tab_bg_active},
+    {"text", color_tab_text},
+    {"text_active", color_tab_text_active},
+    {"sep", color_tab_sep},
+};
+'
+	expected := 'static const tab_cfg_t tab_colors[] = {\n\t{"bar_bg", color_bar_bg},\n\t{"bg", color_tab_bg},\n\t{"bg_active", color_tab_bg_active},\n\t{"text", color_tab_text},\n\t{"text_active", color_tab_text_active},\n\t{"sep", color_tab_sep},\n};\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

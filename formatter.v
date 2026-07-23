@@ -201,6 +201,8 @@ fn (mut ctx FormatContext) run() {
 		if tok.typ == .rbrace {
 			if ctx.skip_rbrace {
 				ctx.skip_rbrace = false
+				if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() }
+				if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
 				ctx.advance(tok)
 				continue
 			}
@@ -246,7 +248,9 @@ fn (mut ctx FormatContext) run() {
 
 		if tok.typ == .semicolon {
 			ctx.next_is_struct = false
-			ctx.body_depth = 0
+			if !(ctx.in_for && ctx.paren_depth > 0) {
+				ctx.body_depth = 0
+			}
 			ctx.sb.write_string(';')
 			if ctx.in_for && ctx.paren_depth > 0 {
 				ctx.sb.write_string(' ')
@@ -276,6 +280,7 @@ fn (mut ctx FormatContext) run() {
 			is_init := ctx.prev_tok.typ in [.comma, .lparen, .lbrace]
 				|| (ctx.prev_tok.typ == .operator && ctx.prev_tok.value == '=')
 				|| ctx.last_was_cast
+			inside_init_arr := is_init && ctx.init_brace.len > 0 && ctx.init_brace.last()
 			ctx.last_was_cast = false
 			ctx.struct_brace << is_struct_def
 			ctx.init_brace << is_init
@@ -309,7 +314,10 @@ fn (mut ctx FormatContext) run() {
 					}
 					break
 				}
-				if is_single {
+				if is_single || inside_init_arr {
+					if ctx.line_start {
+						ctx.write_indent()
+					}
 					ctx.sb.write_string('{')
 					ctx.inline_init_depth++
 					ctx.line_start = false
@@ -462,7 +470,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string(',')
 			nop := ctx.peek(i)
 			in_init_brace := ctx.init_brace.len > 0 && ctx.init_brace.last()
-			if ctx.brace_depth > 0 && in_init_brace {
+			if ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0 {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			} else {
@@ -537,11 +545,13 @@ fn (mut ctx FormatContext) run() {
 			can_be_unary := tok.value in ['*', '&', '+', '-', '~', '!']
 			is_struct_star := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& (ctx.next_is_struct || ctx.id_at_line_start)
+			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
+				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
 			space_before := !ctx.line_start && is_binary && !(ctx.prev_tok.typ == .operator
 				&& !is_binary_op(ctx.prev_tok.value)) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ))
 			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
-				&& !is_struct_star && !(ctx.line_start && can_be_unary)
+				&& !is_struct_star && !is_ptr_dec && !(ctx.line_start && can_be_unary)
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space_before {
@@ -665,6 +675,22 @@ fn is_unary_op_ctx(prev TokenType) bool {
 	return prev !in [.identifier, .rparen, .rbracket, .rbrace, .number, .string_lit, .char_lit]
 }
 
+fn is_ptr_lookahead(tokens []Token, i int) bool {
+	for j in i + 1 .. tokens.len {
+		t := tokens[j].typ
+		if t == .newline { continue
+		 }
+		if t != .identifier { return false }
+		for k in j + 1 .. tokens.len {
+			t2 := tokens[k].typ
+			if t2 == .newline { continue
+			 }
+			return t2 == .operator && tokens[k].value == '='
+		}
+	}
+	return false
+}
+
 fn is_word_type(t TokenType) bool {
 	return t in [.identifier, .number, .string_lit, .char_lit, .kw_if, .kw_else, .kw_for, .kw_while,
 		.kw_do, .kw_switch, .kw_return, .kw_break, .kw_continue, .kw_struct, .kw_union, .kw_enum,
@@ -676,6 +702,9 @@ fn is_word_type(t TokenType) bool {
 fn needs_space_before(tok Token, prev Token) bool {
 	if prev.typ == .eof || prev.typ == .newline || prev.typ == .lparen || prev.typ == .lbracket
 		|| prev.typ == .lbrace || prev.typ == .kw_return || prev.typ == .kw_sizeof {
+		return false
+	}
+	if prev.typ in [.kw_case, .kw_default] {
 		return false
 	}
 	if tok.typ == .semicolon || tok.typ == .comma || tok.typ == .rparen || tok.typ == .rbracket {
