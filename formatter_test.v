@@ -637,3 +637,16 @@ fn test_comment_long_lines_preserve_syntax() {
 		}
 	}
 }
+
+fn test_comment_after_semicolon_separate_line() {
+	input := 'void f(void) {
+	int x = 1;
+
+	// comment on its own line
+	int y = 2;
+}
+'
+	expected := 'void f(void) {\n\tint x = 1;\n\n\t// comment on its own line\n\tint y = 2;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

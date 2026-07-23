@@ -285,7 +285,17 @@ fn (mut ctx FormatContext) run() {
 			} else {
 				nop := ctx.peek(i)
 				if nop == .line_comment && ctx.indent_lvl > 0 {
-					ctx.line_start = false
+					if ctx.tokens.len > i + 1 && ctx.tokens[i + 1].typ == .line_comment {
+						ctx.line_start = false
+					} else {
+						mut sep := '\n'
+						if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
+							sep = '\n\n'
+							ctx.wrote_blank_line = true
+						}
+						ctx.sb.write_string(sep)
+						ctx.line_start = true
+					}
 				} else {
 					mut sep := '\n'
 					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
