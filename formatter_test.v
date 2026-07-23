@@ -524,3 +524,21 @@ fn test_comment_between_structs() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_compound_literal_expansion() {
+	input := 'void f(void) {
+	func(arg, &(struct S){.x = 1, .y = 2});
+	}'
+	expected := 'void f(void) {\n\tfunc(arg, &(struct S){\n\t\t.x = 1,\n\t\t.y = 2\n\t});\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_macro_loop_body() {
+	input := 'void f(void) {
+	MACRO(item, &list, link) stmt(arg);
+	}'
+	expected := 'void f(void) {\n\tMACRO(item, &list, link)\n\t\tstmt(arg);\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

@@ -30,6 +30,7 @@ mut:
 	expect_control    bool
 	body_depth        int
 	inline_init_depth int
+	paren_func_call   []bool
 }
 
 pub fn format(source string, cfg Config) string {
@@ -221,7 +222,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string('}')
 
 			nop := ctx.peek(i)
-			if nop == .semicolon || nop == .comma || nop == .number {
+			if nop == .semicolon || nop == .comma || nop == .number || nop == .rparen {
 				ctx.line_start = false
 			} else if nop == .identifier && is_struct {
 				ctx.line_start = false
@@ -420,6 +421,7 @@ fn (mut ctx FormatContext) run() {
 			is_cast := outer_cast
 				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .kw_return, .kw_sizeof, .kw_case, .kw_default]
 			ctx.paren_cast << is_cast
+			ctx.paren_func_call << (ctx.prev_tok.typ == .identifier)
 			ctx.sb.write_string('(')
 			ctx.paren_depth++
 			ctx.line_start = false
@@ -431,13 +433,15 @@ fn (mut ctx FormatContext) run() {
 			ctx.next_is_struct = false
 			ctx.sb.write_string(')')
 			ctx.paren_depth--
+			is_func_call := ctx.paren_func_call.len > 0 && ctx.paren_func_call.pop()
 			if ctx.paren_depth <= 0 {
 				if ctx.expect_control {
 					ctx.expect_body = true
 					ctx.expect_control = false
 				} else {
 					nop := ctx.peek(i)
-					if nop in [.kw_if, .kw_while, .kw_for, .kw_switch, .kw_do, .lbrace] {
+					if nop in [.kw_if, .kw_while, .kw_for, .kw_switch, .kw_do, .lbrace]
+						|| (nop == .identifier && is_func_call) {
 						ctx.expect_body = true
 					}
 				}
@@ -458,7 +462,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string(',')
 			nop := ctx.peek(i)
 			in_init_brace := ctx.init_brace.len > 0 && ctx.init_brace.last()
-			if ctx.brace_depth > 0 && ctx.paren_depth == 0 && in_init_brace {
+			if ctx.brace_depth > 0 && in_init_brace {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			} else {
