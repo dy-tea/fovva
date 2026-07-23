@@ -11,11 +11,13 @@ fn main() {
 	fp.skip_executable()
 	fp.arguments_description('[files...]')
 
-	max_line_len := fp.int('max-line-len', u8(`m`), 100, 'maximum line length')
-	indent_style_str := fp.string('indent', u8(0), 'tabs', 'indentation style (tabs|spaces)')
-	indent_width := fp.int('indent-width', u8(`w`), 8, 'indentation width')
-	do_sort_includes := fp.bool('sort-includes', u8(0), true, 'sort include directives')
-	in_place := fp.bool('in-place', u8(`i`), false, 'format file in-place')
+	max_line_len := fp.int('max-line-len', `m`, 100, 'maximum line length')
+	indent_style_str := fp.string('indent', 0, 'tabs', 'indentation style (tabs|spaces)')
+	indent_width := fp.int('indent-width', `w`, 8, 'indentation width')
+	do_sort_includes := fp.bool('sort-includes', 0, true, 'sort include directives')
+	in_place := fp.bool('in-place', `i`, false, 'format file in-place')
+	recursive := fp.bool('recursive', `r`, false,
+		'recursively format .c and .h files in directories')
 
 	extra_args := fp.finalize() or {
 		eprintln(fp.usage())
@@ -33,7 +35,21 @@ fn main() {
 		indent_width:  indent_width
 	}
 
-	if extra_args.len == 0 {
+	mut paths := extra_args.clone()
+
+	if recursive {
+		mut expanded := []string{}
+		for arg in extra_args {
+			if os.is_dir(arg) {
+				expanded << collect_c_files(arg)
+			} else {
+				expanded << arg
+			}
+		}
+		paths = expanded.clone()
+	}
+
+	if paths.len == 0 {
 		source_lines := os.get_lines()
 		source := source_lines.join('\n') + '\n'
 		formatted := format(source, cfg)
@@ -41,7 +57,7 @@ fn main() {
 		return
 	}
 
-	for path in extra_args {
+	for path in paths {
 		source := os.read_file(path) or {
 			eprintln('error: failed to read ${path}')
 			exit(1)
@@ -56,4 +72,18 @@ fn main() {
 			print(formatted)
 		}
 	}
+}
+
+fn collect_c_files(path string) []string {
+	mut result := []string{}
+	items := os.ls(path) or { return result }
+	for item in items {
+		full := os.join_path(path, item)
+		if os.is_dir(full) {
+			result << collect_c_files(full)
+		} else if full.ends_with('.c') || full.ends_with('.h') {
+			result << full
+		}
+	}
+	return result
 }

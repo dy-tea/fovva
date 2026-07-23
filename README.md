@@ -21,6 +21,7 @@ Options:
   -w, --indent-width <int>  indentation width (default 8)
   --sort-includes           sort include directives (default true)
   -i, --in-place            format file in-place (default false)
+  -r, --recursive           recursively format .c and .h files in directories (default false)
   -h, --help                display this help and exit
   --version                 output version information and exit
 ```
