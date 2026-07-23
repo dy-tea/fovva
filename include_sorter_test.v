@@ -36,3 +36,19 @@ fn test_sort_includes_only_system() {
 	assert lines[0].contains('<assert.h>')
 	assert lines[1].contains('<zlib.h>')
 }
+
+fn test_sort_includes_skips_ifdef_block() {
+	input := '#include "b.h"\n\n#ifdef SOMEDEF\n\n#include "a.h"\n\n#endif\n\n#include "c.h"\n'
+	result := sort_includes(input)
+	assert result == input, 'preserves scattered includes with ifdef blocks'
+}
+
+fn test_sort_includes_contiguous_top_block() {
+	input := '#include "z.h"\n#include "a.h"\n\nint x;\n'
+	result := sort_includes(input)
+	lines := result.split('\n')
+	assert lines[0].contains('"a.h"')
+	assert lines[1].contains('"z.h"')
+	assert lines[2] == ''
+	assert lines[3].contains('int x')
+}
