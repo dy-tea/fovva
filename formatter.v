@@ -20,7 +20,9 @@ mut:
 	paren_cast        []bool
 	last_cast_paren   bool
 	next_is_struct    bool
+	next_is_enum      bool
 	struct_brace      []bool
+	enum_brace        []bool
 	init_brace        []bool
 	newline_count     int
 	id_at_line_start  bool
@@ -225,6 +227,7 @@ fn (mut ctx FormatContext) run() {
 			if ctx.skip_rbrace {
 				ctx.skip_rbrace = false
 				if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() }
+				if ctx.enum_brace.len > 0 { ctx.enum_brace.pop() }
 				if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
 				ctx.advance(tok)
 				continue
@@ -238,6 +241,7 @@ fn (mut ctx FormatContext) run() {
 				continue
 			}
 			is_struct := if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() } else { false }
+			if ctx.enum_brace.len > 0 { ctx.enum_brace.pop() }
 			is_init_brace := if ctx.init_brace.len > 0 { ctx.init_brace.pop() } else { false }
 			ctx.next_is_struct = false
 			ctx.indent_lvl--
@@ -320,14 +324,18 @@ fn (mut ctx FormatContext) run() {
 			is_struct_def := ctx.next_is_struct && (ctx.prev_tok.typ == .identifier
 				|| ctx.prev_tok.typ == .kw_struct || ctx.prev_tok.typ == .kw_union
 				|| ctx.prev_tok.typ == .kw_enum)
+			is_enum_def := ctx.next_is_enum
+				&& (ctx.prev_tok.typ == .identifier || ctx.prev_tok.typ == .kw_enum)
 			is_init := ctx.prev_tok.typ in [.comma, .lparen, .lbrace]
 				|| (ctx.prev_tok.typ == .operator && ctx.prev_tok.value == '=')
 				|| ctx.last_was_cast
 			inside_init_arr := is_init && ctx.init_brace.len > 0 && ctx.init_brace.last()
 			ctx.last_was_cast = false
 			ctx.struct_brace << is_struct_def
+			ctx.enum_brace << is_enum_def
 			ctx.init_brace << is_init
 			ctx.next_is_struct = false
+			ctx.next_is_enum = false
 			if !ctx.line_start {
 				if (ctx.prev_tok.typ == .rparen && !ctx.last_cast_paren)
 					|| ctx.prev_tok.typ == .identifier
@@ -519,7 +527,9 @@ fn (mut ctx FormatContext) run() {
 			ctx.sb.write_string(',')
 			nop := ctx.peek(i)
 			in_init_brace := ctx.init_brace.len > 0 && ctx.init_brace.last()
-			if ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0 {
+			in_enum_brace := ctx.enum_brace.len > 0 && ctx.enum_brace.last()
+			if (ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0)
+				|| (in_enum_brace && nop != .rbrace) {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			} else {
@@ -637,7 +647,10 @@ fn (mut ctx FormatContext) run() {
 			continue
 		}
 
-		if tok.typ in [.kw_struct, .kw_union, .kw_enum] {
+		if tok.typ == .kw_enum {
+			ctx.next_is_struct = true
+			ctx.next_is_enum = true
+		} else if tok.typ in [.kw_struct, .kw_union] {
 			ctx.next_is_struct = true
 		}
 

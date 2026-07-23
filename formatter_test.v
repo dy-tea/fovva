@@ -475,6 +475,18 @@ fn test_typedef_struct_brace() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_struct_comma_decl_no_split() {
+	input := 'typedef struct bezier_curve_t {
+	double p1x, p1y, p2x, p2y;
+	struct {
+		float x, y;
+	} baked;
+} bezier_curve_t;'
+	expected := 'typedef struct bezier_curve_t {\n\tdouble p1x, p1y, p2x, p2y;\n\tstruct {\n\t\tfloat x, y;\n\t} baked;\n} bezier_curve_t;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_typedef_union_brace() {
 	input := 'typedef union {
 	int i;
@@ -487,7 +499,7 @@ fn test_typedef_union_brace() {
 
 fn test_typedef_enum_brace() {
 	input := 'typedef enum { A, B } myenum;'
-	expected := 'typedef enum {\n\tA, B\n} myenum;\n'
+	expected := 'typedef enum {\n\tA,\n\tB\n} myenum;\n'
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
