@@ -593,7 +593,8 @@ fn (mut ctx FormatContext) run() {
 			is_binary := is_binary_op(tok.value)
 			can_be_unary := tok.value in ['*', '&', '+', '-', '~', '!']
 			is_struct_star := tok.value == '*' && ctx.prev_tok.typ == .identifier
-				&& (ctx.next_is_struct || ctx.id_at_line_start)
+				&& (ctx.next_is_struct || (ctx.id_at_line_start
+				&& ctx.peek(i) in [.identifier, .rparen, .rbracket, .kw_const, .kw_volatile]))
 			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
 			nop := ctx.peek(i)

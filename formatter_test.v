@@ -682,6 +682,15 @@ fn test_cast_rparen_unary_op() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_fn_arg_mult_after_comma() {
+	input := 'void f(void) {
+	wl_event_source_timer_update(idle_timer, idle_timeout * 1000);
+	}'
+	expected := 'void f(void) {\n\twl_event_source_timer_update(idle_timer, idle_timeout * 1000);\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_nested_init_brace_indent() {
 	input := 'Foo arr[2] = {{.sType = A,.stage = B,},{.sType = C,.stage = D,},};'
 	expected := 'Foo arr[2] = {\n\t{\n\t\t.sType = A,\n\t\t.stage = B,\n\t},\n\t{\n\t\t.sType = C,\n\t\t.stage = D,\n\t},\n};\n'
