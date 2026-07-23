@@ -238,7 +238,7 @@ fn (mut ctx FormatContext) run() {
 				continue
 			}
 			is_struct := if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() } else { false }
-			if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
+			is_init_brace := if ctx.init_brace.len > 0 { ctx.init_brace.pop() } else { false }
 			ctx.next_is_struct = false
 			ctx.indent_lvl--
 			ctx.brace_depth--
@@ -258,8 +258,10 @@ fn (mut ctx FormatContext) run() {
 					ctx.sb.write_string('\n')
 					ctx.line_start = true
 				}
-			} else if nop == .kw_else || nop == .kw_while || nop == .dot || nop == .arrow
-				|| nop == .operator || nop == .lparen || nop == .lbracket {
+			} else if nop == .kw_else || nop == .kw_while || nop == .dot
+				|| nop == .arrow
+				|| (nop == .operator && (is_struct || is_init_brace))
+				|| nop == .lparen || nop == .lbracket {
 				ctx.sb.write_string(' ')
 				ctx.line_start = false
 			} else if ctx.indent_lvl == 0 && nop != .eof {
@@ -474,7 +476,7 @@ fn (mut ctx FormatContext) run() {
 			}
 			outer_cast := ctx.paren_cast.len > 0 && ctx.paren_cast[ctx.paren_cast.len - 1]
 			is_cast := (outer_cast && ctx.prev_tok.typ != .kw_sizeof)
-				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .kw_return, .kw_case, .kw_default]
+				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .rparen, .kw_return, .kw_case, .kw_default]
 			ctx.paren_cast << is_cast
 			ctx.paren_func_call << (ctx.prev_tok.typ == .identifier)
 			ctx.sb.write_string('(')
@@ -727,13 +729,15 @@ fn is_unary_op_ctx(prev TokenType) bool {
 fn is_ptr_lookahead(tokens []Token, i int) bool {
 	for j in i + 1 .. tokens.len {
 		t := tokens[j].typ
-		if t == .newline { continue
-		 }
+		if t == .newline {
+			continue
+		}
 		if t != .identifier { return false }
 		for k in j + 1 .. tokens.len {
 			t2 := tokens[k].typ
-			if t2 == .newline { continue
-			 }
+			if t2 == .newline {
+				continue
+			}
 			return t2 == .operator && tokens[k].value == '='
 		}
 	}

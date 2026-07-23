@@ -680,6 +680,31 @@ fn test_nested_init_brace_indent() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_statement_after_block() {
+	input := 'void f(void) {
+	if (cond) { body(); }
+	if (val < min)
+	val = min;
+	if (val > max)
+	val = max;
+}
+*var = val;
+'
+	expected := 'void f(void) {\n\tif (cond) {\n\t\tbody();\n\t}\n\tif (val < min)\n\t\tval = min;\n\tif (val > max)\n\t\tval = max;\n}\n\n*var = val;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_compound_literal_operator() {
+	input := 'void f(void) {
+	int *p = (struct S){ .x = 1 } + 5;
+}
+'
+	expected := 'void f(void) {\n\tint *p = (struct S){\n\t\t.x = 1\n\t} + 5;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_comment_after_semicolon_separate_line() {
 	input := 'void f(void) {
 	int x = 1;
