@@ -834,23 +834,49 @@ fn is_ptr_lookahead(tokens []Token, i int) bool {
 }
 
 fn is_func_param_ctx(tokens []Token, i int) bool {
+	// Scan forward from i to find the matching ')' at the current paren depth.
+	// Then check if what follows is '{' (function definition) or ';' (function declaration)
+	// AND the paren content looks like a parameter list (type-like).
+	mut rparen_idx := -1
 	mut depth := 0
 	for j := i + 1; j < tokens.len; j++ {
 		t := tokens[j].typ
 		if t == .lparen { depth++ }
 		if t == .rparen {
 			if depth == 0 {
-				for k := j + 1; k < tokens.len; k++ {
-					if tokens[k].typ == .newline {
-						continue
-					}
-					return tokens[k].typ == .lbrace
-				}
+				rparen_idx = j
+				break
 			}
 			depth--
 		}
 	}
-	return false
+	if rparen_idx == -1 { return false }
+	// Find the matching '(' for this context by scanning backward
+	mut lparen_idx := -1
+	depth = 0
+	for j := i; j >= 0; j-- {
+		t := tokens[j].typ
+		if t == .rparen { depth++ }
+		if t == .lparen {
+			if depth == 0 {
+				lparen_idx = j
+				break
+			}
+			depth--
+		}
+	}
+	if lparen_idx == -1 { return false }
+	// Check what follows the ')'
+	mut tok_after := TokenType.eof
+	for k := rparen_idx + 1; k < tokens.len; k++ {
+		if tokens[k].typ == .newline { continue
+		 }
+		tok_after = tokens[k].typ
+		break
+	}
+	if tok_after !in [TokenType.lbrace, TokenType.semicolon] { return false }
+	// Verify paren content is type-like (not an expression)
+	return is_type_like_paren(tokens, lparen_idx)
 }
 
 fn is_word_type(t TokenType) bool {
