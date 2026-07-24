@@ -999,3 +999,32 @@ fn test_ternary_colon_cast_space() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_macro_continuation_not_broken() {
+	input := '#define HIDE_IF(n) \\\n\tdo { \\\n\t\tif ((n) && (n)->enabled) {\\\n\t\t\tnr++;\\\n\t\t}\\\n\t} while (0)\n'
+	cfg := Config{
+		max_line_len: 60
+	}
+	result := format(input, cfg)
+	lines := result.split('\n')
+	for line in lines {
+		trimmed := line.trim_space()
+		if trimmed.len > 0 && trimmed.ends_with('\\') {
+			continue
+		}
+		if line.len > cfg.max_line_len {
+			assert false, 'line too long: \'${line}\' (${line.len})'
+		}
+	}
+}
+
+fn test_macro_continuation_preserved() {
+	input := 'void f(void) {
+	int x = 1;
+}
+#define FOO \\\n\tbar; \\\n\tbaz; \\\n\tqux;
+'
+	expected := 'void f(void) {\n\tint x = 1;\n}\n\n#define FOO \\\n\tbar; \\\n\tbaz; \\\n\tqux;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

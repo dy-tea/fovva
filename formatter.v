@@ -67,8 +67,12 @@ fn break_long_lines(text string, cfg Config) string {
 			result << line
 			continue
 		}
-		prefix := leading_whitespace_len(line)
 		trimmed := line.trim_space()
+		if trimmed.ends_with('\\') && !pos_in_string(line, line.len - 1) {
+			result << line
+			continue
+		}
+		prefix := leading_whitespace_len(line)
 		is_comment := trimmed.starts_with('//')
 		comment_prefix := if is_comment {
 			line[..prefix] + '// '
