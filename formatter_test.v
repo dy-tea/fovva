@@ -786,3 +786,56 @@ fn test_trailing_line_comment_same_line() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_for_semicolon_ptr_no_double_space() {
+	input := "for (char *p = value; *p; p++)
+	if (*p == ',')
+		count++;"
+	expected := "for (char *p = value; *p; p++)\n\tif (*p == ',')\n\t\tcount++;\n"
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_unary_not_after_colon() {
+	input := 'n->hidden = has_value ? set_value : !n->hidden;'
+	expected := 'n->hidden = has_value ? set_value : !n->hidden;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_unary_not_after_question() {
+	input := 'x = a ? !b : c;'
+	expected := 'x = a ? !b : c;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_unary_not_after_equals() {
+	input := 'x = !y;'
+	expected := 'x = !y;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_struct_decl_after_enum_with_cast() {
+	input := 'typedef enum {
+	X = (1 << 0),
+} mask_t;
+
+typedef struct {
+	int *a, *b;
+} foo_t;'
+	expected := 'typedef enum {\n\tX = (1 << 0),\n} mask_t;\n\ntypedef struct {\n\tint *a, *b;\n} foo_t;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_adjacent_string_literals_separate_lines() {
+	input := 'f(
+	"  {\\n"
+	"    \\"name\\": \\"%s\\",\\n"
+	"  }");'
+	expected := 'f("  {\\n"\n\t"    \\"name\\": \\"%s\\",\\n"\n\t"  }");\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

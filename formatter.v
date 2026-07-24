@@ -620,9 +620,14 @@ fn (mut ctx FormatContext) run() {
 			is_ptr_param := tok.value == '*' && is_word_type(ctx.prev_tok.typ)
 				&& (ctx.brace_depth == 0 || in_struct_decl)
 				&& nop in [.identifier, .kw_const, .kw_volatile, .operator]
-			space_before := !ctx.line_start && is_binary && !(ctx.prev_tok.typ == .operator
+			always_unary := tok.value in ['!', '~']
+			space_before_always_unary := always_unary && !ctx.line_start
+				&& !(ctx.prev_tok.typ in [.lparen, .lbracket]
+				|| (ctx.prev_tok.typ == .operator && !is_binary_op(ctx.prev_tok.value)))
+			space_before := !ctx.line_start && !(ctx.prev_tok.typ == .operator
 				&& !is_binary_op(ctx.prev_tok.value) && can_be_unary) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ)) && !is_cast_rparen
+				&& (is_binary || space_before_always_unary)
 			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
 				&& !is_struct_star && !is_ptr_dec && !is_ptr_param && !(ctx.line_start
 				&& can_be_unary) && !is_cast_rparen
@@ -667,6 +672,14 @@ fn (mut ctx FormatContext) run() {
 		was_line_start := ctx.line_start
 		if ctx.line_start {
 			ctx.write_indent()
+		} else if tok.typ == .string_lit && ctx.prev_tok.typ == .string_lit && prev_blank_lines > 0 {
+			ctx.sb.write_string('\n')
+			cont_total := ctx.indent_lvl + ctx.body_depth + 1
+			if ctx.config.indent_style == .tabs {
+				ctx.sb.write_string('\t'.repeat(cont_total))
+			} else {
+				ctx.sb.write_string(' '.repeat(cont_total * ctx.config.indent_width))
+			}
 		} else if needs_space_before(tok, ctx.prev_tok) {
 			ctx.sb.write_string(' ')
 		}
@@ -744,8 +757,8 @@ fn (mut ctx FormatContext) write_indent() {
 }
 
 fn is_unary_prefix_ctx(prev TokenType) bool {
-	return prev in [.lparen, .lbracket, .comma, .operator, .lbrace, .rbrace, .kw_return, .kw_sizeof,
-		.kw_case, .kw_default]
+	return prev in [.lparen, .lbracket, .comma, .operator, .semicolon, .lbrace, .rbrace, .kw_return,
+		.kw_sizeof, .kw_case, .kw_default]
 }
 
 fn is_unary_op_ctx(prev TokenType) bool {
