@@ -868,3 +868,9 @@ fn test_cast_int_lit_struct_ptr() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_stmt_after_label() {
+	input := 'void f(void) {\nlabel:\n\tint a = 10;\n}\n'
+	result := format(input)
+	assert result == input, 'got:\n${result}\nexpected:\n${input}'
+}

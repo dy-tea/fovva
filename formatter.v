@@ -587,8 +587,8 @@ fn (mut ctx FormatContext) run() {
 				ctx.indent_lvl++
 				ctx.in_case = false
 			} else if ctx.id_at_line_start && ctx.prev_tok.typ == .identifier {
-				ctx.sb.write_string(':')
-				ctx.line_start = false
+				ctx.sb.write_string(':\n')
+				ctx.line_start = true
 			} else {
 				ctx.sb.write_string(' :')
 				ctx.line_start = false
