@@ -244,6 +244,7 @@ fn (mut ctx FormatContext) run() {
 			if ctx.enum_brace.len > 0 { ctx.enum_brace.pop() }
 			is_init_brace := if ctx.init_brace.len > 0 { ctx.init_brace.pop() } else { false }
 			ctx.next_is_struct = false
+			ctx.next_is_enum = false
 			ctx.indent_lvl--
 			ctx.brace_depth--
 			ctx.write_newline()
@@ -285,6 +286,7 @@ fn (mut ctx FormatContext) run() {
 				ctx.write_indent()
 			}
 			ctx.next_is_struct = false
+			ctx.next_is_enum = false
 			if !(ctx.in_for && ctx.paren_depth > 0) {
 				ctx.body_depth = 0
 			}
@@ -477,9 +479,17 @@ fn (mut ctx FormatContext) run() {
 				&& ctx.prev_tok.typ != .kw_do && ctx.prev_tok.typ != .colon
 				&& ctx.prev_tok.typ != .comma && ctx.prev_tok.typ != .operator
 				&& ctx.prev_tok.typ != .lparen
+			in_struct := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
+			is_func_ptr :=
+				ctx.prev_tok.typ in [.identifier, .kw_void, .kw_char, .kw_int, .kw_float, .kw_double, .kw_long, .kw_short, .kw_signed, .kw_unsigned]
+				&& (ctx.brace_depth == 0 || in_struct) && ctx.prev_prev_tok.typ !in [.arrow, .dot]
+				&& ctx.peek(i) == .operator
 			if ctx.line_start {
 				ctx.write_indent()
-			} else if space {
+				if is_func_ptr {
+					ctx.sb.write_string(' ')
+				}
+			} else if space || is_func_ptr {
 				ctx.sb.write_string(' ')
 			}
 			outer_cast := ctx.paren_cast.len > 0 && ctx.paren_cast[ctx.paren_cast.len - 1]
@@ -496,6 +506,7 @@ fn (mut ctx FormatContext) run() {
 
 		if tok.typ == .rparen {
 			ctx.next_is_struct = false
+			ctx.next_is_enum = false
 			ctx.sb.write_string(')')
 			ctx.paren_depth--
 			is_func_call := ctx.paren_func_call.len > 0 && ctx.paren_func_call.pop()
@@ -609,12 +620,16 @@ fn (mut ctx FormatContext) run() {
 			nop := ctx.peek(i)
 			is_cast_rparen := ctx.last_was_cast && ctx.prev_tok.typ == .rparen && can_be_unary
 				&& nop !in [.number, .string_lit, .char_lit]
+			in_struct_decl := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
+			is_ptr_param := tok.value == '*' && is_word_type(ctx.prev_tok.typ)
+				&& (ctx.brace_depth == 0 || in_struct_decl)
+				&& nop in [.identifier, .kw_const, .kw_volatile, .operator]
 			space_before := !ctx.line_start && is_binary && !(ctx.prev_tok.typ == .operator
 				&& !is_binary_op(ctx.prev_tok.value) && can_be_unary) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ)) && !is_cast_rparen
 			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
-				&& !is_struct_star && !is_ptr_dec && !(ctx.line_start && can_be_unary)
-				&& !is_cast_rparen
+				&& !is_struct_star && !is_ptr_dec && !is_ptr_param && !(ctx.line_start
+				&& can_be_unary) && !is_cast_rparen
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space_before {

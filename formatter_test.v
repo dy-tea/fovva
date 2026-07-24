@@ -351,7 +351,7 @@ fn test_static_ptr_decl() {
 	void f(mytype *p) {}
 	mytype *r;
 	void g(struct S *s) {}'
-	expected := 'static mytype *q = NULL;\nvoid f(mytype *p) {} mytype * r;\nvoid g(struct S *s) {}\n'
+	expected := 'static mytype *q = NULL;\nvoid f(mytype *p) {} mytype *r;\nvoid g(struct S *s) {}\n'
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
