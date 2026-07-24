@@ -34,6 +34,8 @@ mut:
 	inline_init_depth  int
 	inline_init_rbrace bool
 	paren_func_call    []bool
+	case_braced        bool
+	case_brace_stack   []bool
 }
 
 pub fn format(source string, cfg Config) string {
@@ -262,6 +264,13 @@ fn (mut ctx FormatContext) run() {
 			ctx.write_indent()
 			ctx.sb.write_string('}')
 
+			if ctx.case_brace_stack.len > 0 {
+				was_case_braced := ctx.case_brace_stack.pop()
+				if was_case_braced {
+					ctx.indent_lvl++
+				}
+			}
+
 			nop := ctx.peek(i)
 			if nop == .semicolon || nop == .comma || nop == .number || nop == .rparen {
 				ctx.line_start = false
@@ -351,6 +360,7 @@ fn (mut ctx FormatContext) run() {
 			}
 			nop := ctx.peek(i)
 			if nop == .rbrace {
+				ctx.case_braced = false
 				ctx.sb.write_string('{}')
 				ctx.skip_rbrace = true
 				ctx.line_start = false
@@ -375,6 +385,7 @@ fn (mut ctx FormatContext) run() {
 					if ctx.line_start {
 						ctx.write_indent()
 					}
+					ctx.case_braced = false
 					ctx.sb.write_string('{')
 					ctx.inline_init_depth++
 					ctx.line_start = false
@@ -382,6 +393,8 @@ fn (mut ctx FormatContext) run() {
 					if ctx.line_start {
 						ctx.write_indent()
 					}
+					ctx.case_brace_stack << ctx.case_braced
+					ctx.case_braced = false
 					ctx.sb.write_string('{')
 					ctx.indent_lvl++
 					ctx.brace_depth++
@@ -392,6 +405,8 @@ fn (mut ctx FormatContext) run() {
 				if ctx.line_start {
 					ctx.write_indent()
 				}
+				ctx.case_brace_stack << ctx.case_braced
+				ctx.case_braced = false
 				ctx.sb.write_string('{')
 				ctx.indent_lvl++
 				ctx.brace_depth++
@@ -591,6 +606,7 @@ fn (mut ctx FormatContext) run() {
 			if ctx.in_case {
 				nop := ctx.peek(i)
 				if nop == .lbrace {
+					ctx.case_braced = true
 					ctx.sb.write_string(': ')
 					ctx.line_start = false
 				} else {

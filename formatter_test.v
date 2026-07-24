@@ -616,6 +616,42 @@ fn test_switch_case_braced() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_braced_case_followed_by_another_case() {
+	input := 'void f(void) {
+	switch (x) {
+	case A:
+		return 1;
+	case B: {
+		do_thing();
+	}
+	case C:
+		return 3;
+	default:
+		return 0;
+	}
+}'
+	expected := 'void f(void) {\n\tswitch (x) {\n\tcase A:\n\t\treturn 1;\n\tcase B: {\n\t\tdo_thing();\n\t}\n\tcase C:\n\t\treturn 3;\n\tdefault:\n\t\treturn 0;\n\t}\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_braced_case_nested_block() {
+	input := 'void f(void) {
+	switch (x) {
+	case A: {
+		if (cond) {
+			inner();
+		}
+	}
+	case B:
+		return 2;
+	}
+}'
+	expected := 'void f(void) {\n\tswitch (x) {\n\tcase A: {\n\t\tif (cond) {\n\t\t\tinner();\n\t\t}\n\t}\n\tcase B:\n\t\treturn 2;\n\t}\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_switch_case_indent() {
 	input := 'switch (decoration_mode) {
 case DECORATION_NONE:
