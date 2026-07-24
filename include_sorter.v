@@ -56,8 +56,8 @@ pub fn sort_includes(source string) string {
 	// build: leading lines + sorted includes + trailing lines
 	mut result := []string{}
 	result << lines[..start]
-	result << includes.filter(it.is_sys).sorted(|a, b| a.path < b.path).map(|inc| inc.raw)
-	result << includes.filter(!it.is_sys).sorted(|a, b| a.path < b.path).map(|inc| inc.raw)
+	result << includes.filter(!it.is_sys).sorted(|a, b| a.path.to_lower() < b.path.to_lower()).map(|inc| inc.raw)
+	result << includes.filter(it.is_sys).sorted(|a, b| a.path.to_lower() < b.path.to_lower()).map(|inc| inc.raw)
 	result << lines[last_inc_idx + 1..]
 	return result.join('\n')
 }

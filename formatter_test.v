@@ -98,10 +98,10 @@ fn test_format_sort_includes() {
 	}
 	result := format(input, cfg)
 	lines := result.split('\n')
-	assert lines[0].contains('<assert.h>')
-	assert lines[1].contains('<stdlib.h>')
-	assert lines[2].contains('"a.h"')
-	assert lines[3].contains('"z.h"')
+	assert lines[0].contains('"a.h"')
+	assert lines[1].contains('"z.h"')
+	assert lines[2].contains('<assert.h>')
+	assert lines[3].contains('<stdlib.h>')
 }
 
 fn test_format_no_sort_includes() {
