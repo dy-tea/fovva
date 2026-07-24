@@ -118,9 +118,19 @@ fn test_format_no_sort_includes() {
 	assert lines[1].contains('"a.h"')
 }
 
-fn test_format_empty_input() {
-	result := format('')
-	assert result == '\n' || result == ''
+fn test_format_inline_init_no_extra_blank_line() {
+	input := 'keybind_t keybinds[MAX_KEYBINDS];
+size_t num_keybinds = 0;
+keybind_t bell_bind = {0};
+gesturebind_t gesture_bindings[MAX_GESTUREBINDS];
+size_t num_gesturebinds = 0;
+hotcornerbind_t hotcorner_bindings[MAX_HOTCORNERBINDS];
+size_t num_hotcornerbinds = 0;
+submap_t *active_submap = NULL;
+bool minimize_to_scratchpad = false;
+bool realtime_scheduling = false;'
+	result := format(input)
+	assert result == input, 'got:\n${result}\nexpected:\n${input}'
 }
 
 fn test_format_return_statement() {

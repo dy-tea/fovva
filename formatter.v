@@ -6,33 +6,34 @@ struct FormatContext {
 	config Config
 	tokens []Token
 mut:
-	sb                strings.Builder
-	indent_lvl        int
-	brace_depth       int
-	line_start        bool
-	prev_tok          Token
-	prev_prev_tok     Token
-	paren_depth       int
-	in_for            bool
-	in_case           bool
-	prev_newline      bool
-	skip_rbrace       bool
-	paren_cast        []bool
-	last_cast_paren   bool
-	next_is_struct    bool
-	next_is_enum      bool
-	struct_brace      []bool
-	enum_brace        []bool
-	init_brace        []bool
-	newline_count     int
-	id_at_line_start  bool
-	last_was_cast     bool
-	wrote_blank_line  bool
-	expect_body       bool
-	expect_control    bool
-	body_depth        int
-	inline_init_depth int
-	paren_func_call   []bool
+	sb                 strings.Builder
+	indent_lvl         int
+	brace_depth        int
+	line_start         bool
+	prev_tok           Token
+	prev_prev_tok      Token
+	paren_depth        int
+	in_for             bool
+	in_case            bool
+	prev_newline       bool
+	skip_rbrace        bool
+	paren_cast         []bool
+	last_cast_paren    bool
+	next_is_struct     bool
+	next_is_enum       bool
+	struct_brace       []bool
+	enum_brace         []bool
+	init_brace         []bool
+	newline_count      int
+	id_at_line_start   bool
+	last_was_cast      bool
+	wrote_blank_line   bool
+	expect_body        bool
+	expect_control     bool
+	body_depth         int
+	inline_init_depth  int
+	inline_init_rbrace bool
+	paren_func_call    []bool
 }
 
 pub fn format(source string, cfg Config) string {
@@ -244,6 +245,7 @@ fn (mut ctx FormatContext) run() {
 				if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
 				ctx.sb.write_string('}')
 				ctx.line_start = false
+				ctx.inline_init_rbrace = true
 				ctx.advance(tok)
 				continue
 			}
@@ -309,10 +311,12 @@ fn (mut ctx FormatContext) run() {
 					ctx.line_start = false
 				} else {
 					mut sep := '\n'
-					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
+					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof
+						&& !ctx.inline_init_rbrace {
 						sep = '\n\n'
 						ctx.wrote_blank_line = true
 					}
+					ctx.inline_init_rbrace = false
 					ctx.sb.write_string(sep)
 					ctx.line_start = true
 				}
