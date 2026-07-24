@@ -933,6 +933,13 @@ fn test_cast_rparen_preserved() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_ptr_ptr_decl() {
+	input := 'void test() { node_t **new_nodes = something(); }'
+	expected := 'void test() {\n\tnode_t **new_nodes = something();\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_func_decl_ptr_param() {
 	input := 'int somefn(A *a, A *b);'
 	expected := 'int somefn(A *a, A *b);\n'

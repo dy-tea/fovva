@@ -636,6 +636,14 @@ fn (mut ctx FormatContext) run() {
 			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
 			nop := ctx.peek(i)
+			mut next_val := ''
+			for j in i + 1 .. ctx.tokens.len {
+				if ctx.tokens[j].typ == .newline { continue
+				 }
+				next_val = ctx.tokens[j].value
+				break
+			}
+			is_ptr_ptr := tok.value == '*' && nop == .operator && next_val == '*'
 			is_cast_rparen := ctx.last_was_cast && ctx.prev_tok.typ == .rparen && can_be_unary
 				&& nop !in [.number, .string_lit, .char_lit]
 			in_struct_decl := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
@@ -652,8 +660,8 @@ fn (mut ctx FormatContext) run() {
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ)) && !is_cast_rparen
 				&& (is_binary || space_before_always_unary)
 			is_truly_binary := is_binary && !(can_be_unary && is_unary_op_ctx(ctx.prev_tok.typ))
-				&& !is_struct_star && !is_ptr_dec && !is_ptr_param && !(ctx.line_start
-				&& can_be_unary) && !is_cast_rparen
+				&& !is_struct_star && !is_ptr_dec && !is_ptr_param && !is_ptr_ptr
+				&& !(ctx.line_start && can_be_unary) && !is_cast_rparen
 			if ctx.line_start {
 				ctx.write_indent()
 			} else if space_before {
