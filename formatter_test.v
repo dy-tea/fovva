@@ -881,3 +881,24 @@ fn test_label_indent() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_expr_paren_not_cast() {
+	input := 'double dist_right = (rect.x + rect.width) - lx;'
+	expected := 'double dist_right = (rect.x + rect.width) - lx;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_mult_in_parens() {
+	input := 'double dist = sqrt(dx * dx + dy * dy);'
+	expected := 'double dist = sqrt(dx * dx + dy * dy);\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_cast_rparen_preserved() {
+	input := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);'
+	expected := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

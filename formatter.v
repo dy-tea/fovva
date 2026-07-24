@@ -493,8 +493,11 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			}
 			outer_cast := ctx.paren_cast.len > 0 && ctx.paren_cast[ctx.paren_cast.len - 1]
-			is_cast := (outer_cast && ctx.prev_tok.typ != .kw_sizeof)
+			mut is_cast := (outer_cast && ctx.prev_tok.typ != .kw_sizeof)
 				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .rparen, .kw_return, .kw_case, .kw_default]
+			if is_cast && !is_type_like_paren(ctx.tokens, i) {
+				is_cast = false
+			}
 			ctx.paren_cast << is_cast
 			ctx.paren_func_call << (ctx.prev_tok.typ == .identifier)
 			ctx.sb.write_string('(')
@@ -618,16 +621,17 @@ fn (mut ctx FormatContext) run() {
 			is_binary := is_binary_op(tok.value)
 			can_be_unary := tok.value in ['*', '&', '+', '-', '~', '!']
 			is_struct_star := tok.value == '*' && ctx.prev_tok.typ == .identifier
-				&& (ctx.next_is_struct || (ctx.id_at_line_start
-				&& ctx.peek(i) in [.identifier, .rparen, .rbracket, .kw_const, .kw_volatile]))
+				&& (ctx.next_is_struct || (ctx.id_at_line_start && ctx.peek(i) in [.identifier, .rparen, .rbracket, .kw_const, .kw_volatile]
+				&& (ctx.paren_depth == 0 || ctx.peek(i) != .identifier)))
 			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
 			nop := ctx.peek(i)
 			is_cast_rparen := ctx.last_was_cast && ctx.prev_tok.typ == .rparen && can_be_unary
 				&& nop !in [.number, .string_lit, .char_lit]
 			in_struct_decl := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
-			is_ptr_param := tok.value == '*' && is_word_type(ctx.prev_tok.typ)
-				&& (ctx.brace_depth == 0 || in_struct_decl)
+			is_ptr_param := tok.value == '*' && is_word_type(ctx.prev_tok.typ) && (in_struct_decl
+				|| (ctx.brace_depth == 0 && (ctx.paren_depth == 0
+				|| is_func_param_ctx(ctx.tokens, i))))
 				&& nop in [.identifier, .kw_const, .kw_volatile, .operator]
 			always_unary := tok.value in ['!', '~']
 			space_before_always_unary := always_unary && !ctx.line_start
@@ -783,6 +787,34 @@ fn is_unary_op_ctx(prev TokenType) bool {
 	return prev !in [.identifier, .rparen, .rbracket, .rbrace, .number, .string_lit, .char_lit]
 }
 
+fn is_type_like_paren(tokens []Token, i int) bool {
+	mut depth := 1
+	for j := i + 1; j < tokens.len; j++ {
+		t := tokens[j].typ
+		if t == .newline || t == .line_comment || t == .block_comment {
+			continue
+		}
+		if t == .lparen {
+			depth++
+			continue
+		}
+		if t == .rparen {
+			depth--
+			if depth == 0 {
+				break
+			}
+			continue
+		}
+		if depth == 1 {
+			if t in [.number, .string_lit, .char_lit, .dot, .arrow]
+				|| (t == .operator && tokens[j].value !in ['*', '&']) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 fn is_ptr_lookahead(tokens []Token, i int) bool {
 	for j in i + 1 .. tokens.len {
 		t := tokens[j].typ
@@ -796,6 +828,26 @@ fn is_ptr_lookahead(tokens []Token, i int) bool {
 				continue
 			}
 			return t2 == .operator && tokens[k].value == '='
+		}
+	}
+	return false
+}
+
+fn is_func_param_ctx(tokens []Token, i int) bool {
+	mut depth := 0
+	for j := i + 1; j < tokens.len; j++ {
+		t := tokens[j].typ
+		if t == .lparen { depth++ }
+		if t == .rparen {
+			if depth == 0 {
+				for k := j + 1; k < tokens.len; k++ {
+					if tokens[k].typ == .newline {
+						continue
+					}
+					return tokens[k].typ == .lbrace
+				}
+			}
+			depth--
 		}
 	}
 	return false
