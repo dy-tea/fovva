@@ -196,6 +196,12 @@ fn (mut ctx FormatContext) run() {
 		if tok.typ == .line_comment {
 			if ctx.line_start {
 				ctx.write_indent()
+			} else if prev_blank_lines > 1 {
+				ctx.sb.write_string('\n\n')
+				ctx.write_indent()
+			} else if prev_blank_lines > 0 {
+				ctx.sb.write_string('\n')
+				ctx.write_indent()
 			} else {
 				ctx.sb.write_string(' ')
 			}
@@ -580,6 +586,9 @@ fn (mut ctx FormatContext) run() {
 				ctx.line_start = true
 				ctx.indent_lvl++
 				ctx.in_case = false
+			} else if ctx.id_at_line_start && ctx.prev_tok.typ == .identifier {
+				ctx.sb.write_string(':')
+				ctx.line_start = false
 			} else {
 				ctx.sb.write_string(' :')
 				ctx.line_start = false
@@ -671,7 +680,11 @@ fn (mut ctx FormatContext) run() {
 
 		was_line_start := ctx.line_start
 		if ctx.line_start {
-			ctx.write_indent()
+			if tok.typ == .identifier && ctx.peek(i) == .colon {
+				// label - outdented, no indent
+			} else {
+				ctx.write_indent()
+			}
 		} else if tok.typ == .string_lit && ctx.prev_tok.typ == .string_lit && prev_blank_lines > 0 {
 			ctx.sb.write_string('\n')
 			cont_total := ctx.indent_lvl + ctx.body_depth + 1

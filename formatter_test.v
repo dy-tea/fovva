@@ -839,3 +839,25 @@ fn test_adjacent_string_literals_separate_lines() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_label_no_space_before_colon() {
+	input := 'void f(void) {
+	goto end;
+end:
+	return;
+}'
+	expected := 'void f(void) {\n\tgoto end;\nend:\n\treturn;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_line_comment_on_own_line_after_label() {
+	input := 'void f(void) {
+somelabel:
+	// comment
+	do_thing();
+}'
+	expected := 'void f(void) {\nsomelabel:\n\t// comment\n\tdo_thing();\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
