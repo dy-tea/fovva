@@ -602,6 +602,20 @@ fn test_nested_for_without_braces() {
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
 
+fn test_switch_case_braced() {
+	input := 'switch (12) {
+    case 12: {
+        int a = 12;
+    }
+    default:
+        break;
+}
+'
+	expected := 'switch (12) {\ncase 12: {\n\tint a = 12;\n}\ndefault:\n\tbreak;\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
 fn test_switch_case_indent() {
 	input := 'switch (decoration_mode) {
 case DECORATION_NONE:
@@ -932,4 +946,3 @@ fn test_func_def_ptr_param() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
-

@@ -280,7 +280,7 @@ fn (mut ctx FormatContext) run() {
 				|| nop == .lparen || nop == .lbracket {
 				ctx.sb.write_string(' ')
 				ctx.line_start = false
-			} else if ctx.indent_lvl == 0 && nop != .eof {
+			} else if ctx.indent_lvl == 0 && ctx.brace_depth == 0 && nop != .eof {
 				ctx.sb.write_string('\n\n')
 				ctx.line_start = true
 				ctx.wrote_blank_line = true
@@ -311,8 +311,8 @@ fn (mut ctx FormatContext) run() {
 					ctx.line_start = false
 				} else {
 					mut sep := '\n'
-					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof
-						&& !ctx.inline_init_rbrace {
+					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && ctx.brace_depth == 0
+						&& nop != .eof && !ctx.inline_init_rbrace {
 						sep = '\n\n'
 						ctx.wrote_blank_line = true
 					}
@@ -589,9 +589,15 @@ fn (mut ctx FormatContext) run() {
 
 		if tok.typ == .colon {
 			if ctx.in_case {
-				ctx.sb.write_string(':\n')
-				ctx.line_start = true
-				ctx.indent_lvl++
+				nop := ctx.peek(i)
+				if nop == .lbrace {
+					ctx.sb.write_string(': ')
+					ctx.line_start = false
+				} else {
+					ctx.sb.write_string(':\n')
+					ctx.line_start = true
+					ctx.indent_lvl++
+				}
 				ctx.in_case = false
 			} else if ctx.id_at_line_start && ctx.prev_tok.typ == .identifier {
 				ctx.sb.write_string(':\n')
