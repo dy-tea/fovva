@@ -756,3 +756,33 @@ fn test_comment_after_semicolon_separate_line() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_last_was_cast_leak_into_struct() {
+	input := 'typedef enum {
+	X = 1,
+	Y = (1 << 2),
+} mask_t;
+
+typedef struct {
+	int a;
+	int *b, *c;
+} foo_t;'
+	expected := 'typedef enum {\n\tX = 1,\n\tY = (1 << 2),\n} mask_t;\n\ntypedef struct {\n\tint a;\n\tint *b, *c;\n} foo_t;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_block_comment_standalone() {
+	input := '/* Returns true when the command takes ownership of client_fd. */
+bool process_ipc_message(char *msg, int client_fd);'
+	expected := '/* Returns true when the command takes ownership of client_fd. */\nbool process_ipc_message(char *msg, int client_fd);\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_trailing_line_comment_same_line() {
+	input := 'extern int focus_on_activate; // focus_on_activate_mode_t'
+	expected := 'extern int focus_on_activate; // focus_on_activate_mode_t\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

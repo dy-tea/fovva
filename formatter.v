@@ -207,13 +207,14 @@ fn (mut ctx FormatContext) run() {
 		}
 
 		if tok.typ == .block_comment {
+			was_line_start := ctx.line_start
 			if ctx.line_start {
 				ctx.write_indent()
 			} else {
 				ctx.sb.write_string(' ')
 			}
 			ctx.sb.write_string(tok.value)
-			if tok.value.contains('\n') && !tok.value.ends_with('\n') {
+			if was_line_start || (tok.value.contains('\n') && !tok.value.ends_with('\n')) {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			} else {
@@ -245,6 +246,8 @@ fn (mut ctx FormatContext) run() {
 			is_init_brace := if ctx.init_brace.len > 0 { ctx.init_brace.pop() } else { false }
 			ctx.next_is_struct = false
 			ctx.next_is_enum = false
+			ctx.last_was_cast = false
+			ctx.last_cast_paren = false
 			ctx.indent_lvl--
 			ctx.brace_depth--
 			ctx.write_newline()
@@ -295,18 +298,9 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			} else {
 				nop := ctx.peek(i)
-				if nop == .line_comment && ctx.indent_lvl > 0 {
-					if ctx.tokens.len > i + 1 && ctx.tokens[i + 1].typ == .line_comment {
-						ctx.line_start = false
-					} else {
-						mut sep := '\n'
-						if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
-							sep = '\n\n'
-							ctx.wrote_blank_line = true
-						}
-						ctx.sb.write_string(sep)
-						ctx.line_start = true
-					}
+				immediate_is_nl := i + 1 < ctx.tokens.len && ctx.tokens[i + 1].typ == .newline
+				if nop == .line_comment && !immediate_is_nl {
+					ctx.line_start = false
 				} else {
 					mut sep := '\n'
 					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && nop != .eof {
@@ -539,7 +533,9 @@ fn (mut ctx FormatContext) run() {
 			nop := ctx.peek(i)
 			in_init_brace := ctx.init_brace.len > 0 && ctx.init_brace.last()
 			in_enum_brace := ctx.enum_brace.len > 0 && ctx.enum_brace.last()
-			if (ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0) || in_enum_brace {
+			write_newline := (ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0)
+				|| in_enum_brace
+			if write_newline {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
 			} else {
