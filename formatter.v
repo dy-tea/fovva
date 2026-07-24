@@ -793,6 +793,7 @@ fn is_unary_op_ctx(prev TokenType) bool {
 
 fn is_type_like_paren(tokens []Token, i int) bool {
 	mut depth := 1
+	mut bracket_depth := 0
 	for j := i + 1; j < tokens.len; j++ {
 		t := tokens[j].typ
 		if t == .newline || t == .line_comment || t == .block_comment {
@@ -809,7 +810,15 @@ fn is_type_like_paren(tokens []Token, i int) bool {
 			}
 			continue
 		}
-		if depth == 1 {
+		if t == .lbracket {
+			bracket_depth++
+			continue
+		}
+		if t == .rbracket {
+			bracket_depth--
+			continue
+		}
+		if depth == 1 && bracket_depth == 0 {
 			if t in [.number, .string_lit, .char_lit, .dot, .arrow]
 				|| (t == .operator && tokens[j].value !in ['*', '&']) {
 				return false
