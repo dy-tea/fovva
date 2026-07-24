@@ -2,12 +2,15 @@ module main
 
 import os
 import flag
+import v.vmod
 
 fn main() {
+	vmodfile := vmod.decode(@VMOD_FILE)!
+
 	mut fp := flag.new_flag_parser(os.args)
-	fp.application('fovva')
-	fp.version('0.0.0')
-	fp.description('C code formatter')
+	fp.application(vmodfile.name)
+	fp.version(vmodfile.version)
+	fp.description(vmodfile.description)
 	fp.skip_executable()
 	fp.arguments_description('[files...]')
 
@@ -87,3 +90,4 @@ fn collect_c_files(path string) []string {
 	}
 	return result
 }
+
