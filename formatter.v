@@ -693,7 +693,8 @@ fn (mut ctx FormatContext) run() {
 			} else {
 				ctx.sb.write_string(' '.repeat(cont_total * ctx.config.indent_width))
 			}
-		} else if needs_space_before(tok, ctx.prev_tok) {
+		} else if needs_space_before(tok, ctx.prev_tok) && !(ctx.prev_tok.typ == .rparen
+			&& ctx.last_was_cast) {
 			ctx.sb.write_string(' ')
 		}
 

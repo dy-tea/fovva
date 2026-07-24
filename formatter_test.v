@@ -861,3 +861,10 @@ somelabel:
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_cast_int_lit_struct_ptr() {
+	input := 'struct A {};int*p=(A*)1;'
+	expected := 'struct A {};\n\nint *p = (A *)1;\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
