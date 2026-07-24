@@ -681,7 +681,11 @@ fn (mut ctx FormatContext) run() {
 		was_line_start := ctx.line_start
 		if ctx.line_start {
 			if tok.typ == .identifier && ctx.peek(i) == .colon {
-				// label - outdented, no indent
+				if ctx.indent_lvl > 0 {
+					ctx.indent_lvl--
+					ctx.write_indent()
+					ctx.indent_lvl++
+				}
 			} else {
 				ctx.write_indent()
 			}

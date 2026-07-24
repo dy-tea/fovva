@@ -874,3 +874,10 @@ fn test_stmt_after_label() {
 	result := format(input)
 	assert result == input, 'got:\n${result}\nexpected:\n${input}'
 }
+
+fn test_label_indent() {
+	input := 'void main(void){int a = 10;goto is_a;if(a){is_a:a = 12;}}'
+	expected := 'void main(void) {\n\tint a = 10;\n\tgoto is_a;\n\tif (a) {\n\tis_a:\n\t\ta = 12;\n\t}\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
