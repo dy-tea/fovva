@@ -989,3 +989,13 @@ fn test_func_def_ptr_param() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_ternary_colon_cast_space() {
+	input := 'void f(void) {
+	fbo0 = ping ? (GLuint)state->pong.native_handle[0] : (GLuint)state->ping.native_handle[0];
+	tex0 = ping ? (GLuint)state->pong.native_handle[1] : (GLuint)state->ping.native_handle[1];
+}'
+	expected := 'void f(void) {\n\tfbo0 = ping ? (GLuint)state->pong.native_handle[0] : (GLuint)state->ping.native_handle[0];\n\ttex0 = ping ? (GLuint)state->pong.native_handle[1] : (GLuint)state->ping.native_handle[1];\n}\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

@@ -495,9 +495,8 @@ fn (mut ctx FormatContext) run() {
 				&& ctx.prev_tok.typ != .kw_sizeof && ctx.prev_tok.typ != .kw_return
 				&& ctx.prev_tok.typ != .kw_if && ctx.prev_tok.typ != .kw_while
 				&& ctx.prev_tok.typ != .kw_for && ctx.prev_tok.typ != .kw_switch
-				&& ctx.prev_tok.typ != .kw_do && ctx.prev_tok.typ != .colon
-				&& ctx.prev_tok.typ != .comma && ctx.prev_tok.typ != .operator
-				&& ctx.prev_tok.typ != .lparen
+				&& ctx.prev_tok.typ != .kw_do && ctx.prev_tok.typ != .comma
+				&& ctx.prev_tok.typ != .operator && ctx.prev_tok.typ != .lparen
 			in_struct := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
 			is_func_ptr :=
 				ctx.prev_tok.typ in [.identifier, .kw_void, .kw_char, .kw_int, .kw_float, .kw_double, .kw_long, .kw_short, .kw_signed, .kw_unsigned]
