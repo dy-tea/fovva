@@ -34,6 +34,7 @@ mut:
 	inline_init_depth  int
 	inline_init_rbrace bool
 	paren_func_call    []bool
+	init_brace_pd      []int
 	case_braced        bool
 	case_brace_stack   []bool
 }
@@ -243,12 +244,14 @@ fn (mut ctx FormatContext) run() {
 				if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() }
 				if ctx.enum_brace.len > 0 { ctx.enum_brace.pop() }
 				if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
+				if ctx.init_brace_pd.len > 0 { ctx.init_brace_pd.pop() }
 				ctx.advance(tok)
 				continue
 			}
 			if ctx.inline_init_depth > 0 {
 				ctx.inline_init_depth--
 				if ctx.init_brace.len > 0 { ctx.init_brace.pop() }
+				if ctx.init_brace_pd.len > 0 { ctx.init_brace_pd.pop() }
 				ctx.sb.write_string('}')
 				ctx.line_start = false
 				ctx.inline_init_rbrace = true
@@ -258,6 +261,7 @@ fn (mut ctx FormatContext) run() {
 			is_struct := if ctx.struct_brace.len > 0 { ctx.struct_brace.pop() } else { false }
 			if ctx.enum_brace.len > 0 { ctx.enum_brace.pop() }
 			is_init_brace := if ctx.init_brace.len > 0 { ctx.init_brace.pop() } else { false }
+			if ctx.init_brace_pd.len > 0 { ctx.init_brace_pd.pop() }
 			ctx.next_is_struct = false
 			ctx.next_is_enum = false
 			ctx.last_was_cast = false
@@ -353,6 +357,7 @@ fn (mut ctx FormatContext) run() {
 			ctx.struct_brace << is_struct_def
 			ctx.enum_brace << is_enum_def
 			ctx.init_brace << is_init
+			ctx.init_brace_pd << ctx.paren_depth
 			ctx.next_is_struct = false
 			ctx.next_is_enum = false
 			if !ctx.line_start {
@@ -564,8 +569,10 @@ fn (mut ctx FormatContext) run() {
 			nop := ctx.peek(i)
 			in_init_brace := ctx.init_brace.len > 0 && ctx.init_brace.last()
 			in_enum_brace := ctx.enum_brace.len > 0 && ctx.enum_brace.last()
-			write_newline := (ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0)
-				|| in_enum_brace
+			at_init_pd := ctx.init_brace_pd.len > 0 && ctx.paren_depth == ctx.init_brace_pd.last()
+			write_newline :=
+				(ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0 && at_init_pd)
+				|| (in_enum_brace && ctx.paren_depth == 0)
 			if write_newline {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true

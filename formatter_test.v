@@ -1028,3 +1028,17 @@ fn test_macro_continuation_preserved() {
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
 }
+
+fn test_init_brace_macro_call_no_split() {
+	input := 'static const entry_t table[] = {
+	ENTRY2("focus", "west", BIND_FOCUS_WEST),
+	ENTRY2("focus", "south", BIND_FOCUS_SOUTH),
+	ENTRY("node", "-t", "tiled", BIND_NODE_STATE_TILED),
+	ENTRY("node", "--state", "floating", BIND_NODE_STATE_FLOATING),
+	ENTRY1("quit", BIND_QUIT),
+};
+'
+	expected := 'static const entry_t table[] = {\n\tENTRY2("focus", "west", BIND_FOCUS_WEST),\n\tENTRY2("focus", "south", BIND_FOCUS_SOUTH),\n\tENTRY("node", "-t", "tiled", BIND_NODE_STATE_TILED),\n\tENTRY("node", "--state", "floating", BIND_NODE_STATE_FLOATING),\n\tENTRY1("quit", BIND_QUIT),\n};\n'
+	result := format(input)
+	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}

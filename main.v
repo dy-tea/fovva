@@ -90,4 +90,3 @@ fn collect_c_files(path string) []string {
 	}
 	return result
 }
-
