@@ -43,10 +43,10 @@ fn main() {
 	if recursive {
 		mut expanded := []string{}
 		for arg in extra_args {
-			if os.is_dir(arg) {
-				expanded << collect_c_files(arg)
+			expanded << if os.is_dir(arg) {
+				collect_c_files(arg)
 			} else {
-				expanded << arg
+				[arg]
 			}
 		}
 		paths = expanded.clone()
@@ -55,8 +55,7 @@ fn main() {
 	if paths.len == 0 {
 		source_lines := os.get_lines()
 		source := source_lines.join('\n') + '\n'
-		formatted := format(source, cfg)
-		print(formatted)
+		print(format(source, cfg))
 		return
 	}
 

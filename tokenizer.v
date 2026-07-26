@@ -105,19 +105,11 @@ fn kw_type(word string) !TokenType {
 }
 
 fn is_ident_start(c u8) bool {
-	return (c >= `a` && c <= `z`) || (c >= `A` && c <= `Z`) || c == `_`
+	return c.is_letter() || c == `_`
 }
 
 fn is_ident_continue(c u8) bool {
-	return is_ident_start(c) || (c >= `0` && c <= `9`)
-}
-
-fn is_digit(c u8) bool {
-	return c >= `0` && c <= `9`
-}
-
-fn is_hex_digit(c u8) bool {
-	return is_digit(c) || (c >= `a` && c <= `f`) || (c >= `A` && c <= `F`)
+	return is_ident_start(c) || c.is_digit()
 }
 
 fn is_space(c u8) bool {
@@ -254,14 +246,14 @@ pub fn tokenize(source string) []Token {
 			continue
 		}
 
-		if is_digit(c) || (c == `.` && pos + 1 < n && is_digit(source[pos + 1])) {
+		if c.is_digit() || (c == `.` && pos + 1 < n && source[pos + 1].is_digit()) {
 			start := pos
 			pos++
 			col++
 			if c == `0` && pos < n && (source[pos] == `x` || source[pos] == `X`) {
 				pos++
 				col++
-				for pos < n && is_hex_digit(source[pos]) {
+				for pos < n && source[pos].is_hex_digit() {
 					pos++
 					col++
 				}
@@ -271,14 +263,14 @@ pub fn tokenize(source string) []Token {
 					col++
 				}
 			} else {
-				for pos < n && is_digit(source[pos]) {
+				for pos < n && source[pos].is_digit() {
 					pos++
 					col++
 				}
 				if pos < n && source[pos] == `.` {
 					pos++
 					col++
-					for pos < n && is_digit(source[pos]) {
+					for pos < n && source[pos].is_digit() {
 						pos++
 						col++
 					}
@@ -290,7 +282,7 @@ pub fn tokenize(source string) []Token {
 						pos++
 						col++
 					}
-					for pos < n && is_digit(source[pos]) {
+					for pos < n && source[pos].is_digit() {
 						pos++
 						col++
 					}
@@ -384,21 +376,21 @@ pub fn tokenize(source string) []Token {
 			}
 		}
 
-		match c {
-			`{` { tokens << Token{.lbrace, '{', line, col} }
-			`}` { tokens << Token{.rbrace, '}', line, col} }
-			`(` { tokens << Token{.lparen, '(', line, col} }
-			`)` { tokens << Token{.rparen, ')', line, col} }
-			`[` { tokens << Token{.lbracket, '[', line, col} }
-			`]` { tokens << Token{.rbracket, ']', line, col} }
-			`;` { tokens << Token{.semicolon, ';', line, col} }
-			`,` { tokens << Token{.comma, ',', line, col} }
-			`.` { tokens << Token{.dot, '.', line, col} }
-			`:` { tokens << Token{.colon, ':', line, col} }
-			`?` { tokens << Token{.question, '?', line, col} }
-			else { tokens << Token{.operator, c.ascii_str(), line, col} }
+		typ := match c {
+			`{` { TokenType.lbrace }
+			`}` { .rbrace }
+			`(` { .lparen }
+			`)` { .rparen }
+			`[` { .lbracket }
+			`]` { .rbracket }
+			`;` { .semicolon }
+			`,` { .comma }
+			`.` { .dot }
+			`:` { .colon }
+			`?` { .question }
+			else { .operator }
 		}
-
+		tokens << Token{typ, c.ascii_str(), line, col}
 		pos++
 		col++
 	}

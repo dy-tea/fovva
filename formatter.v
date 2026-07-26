@@ -97,10 +97,10 @@ fn break_long_lines(text string, cfg Config) string {
 				break
 			}
 			result << remaining[..best_pos]
-			if is_comment {
-				remaining = comment_prefix + remaining[best_pos..].trim_left(' ')
+			remaining = if is_comment {
+				comment_prefix + remaining[best_pos..].trim_left(' ')
 			} else {
-				remaining = cont_str + remaining[best_pos..].trim_left(' ')
+				cont_str + remaining[best_pos..].trim_left(' ')
 			}
 		}
 		result << remaining
@@ -123,8 +123,9 @@ fn find_break_pos(line string, prefix_len int, max_len int) int {
 	mut best_op := -1
 	mut best_space := -1
 	for pos := end; pos > prefix_len; pos-- {
-		if pos_in_string(line, pos) { continue
-		 }
+		if pos_in_string(line, pos) {
+			continue
+		}
 		if pos + 1 < line.len {
 			if line[pos] == `,` && line[pos + 1] == ` ` {
 				return pos + 1
@@ -377,13 +378,15 @@ fn (mut ctx FormatContext) run() {
 				mut is_single := false
 				for j in i + 1 .. ctx.tokens.len {
 					t := ctx.tokens[j].typ
-					if t == .newline { continue
-					 }
+					if t == .newline {
+						continue
+					}
 					if t in [.number, .identifier, .string_lit, .char_lit] {
 						for k in j + 1 .. ctx.tokens.len {
 							t2 := ctx.tokens[k].typ
-							if t2 == .newline { continue
-							 }
+							if t2 == .newline {
+								continue
+							}
 							if t2 == .rbrace { is_single = true }
 							break
 						}
@@ -814,11 +817,11 @@ fn (mut ctx FormatContext) write_newline() {
 
 fn (mut ctx FormatContext) write_indent() {
 	total := ctx.indent_lvl + ctx.body_depth
-	if ctx.config.indent_style == .tabs {
-		ctx.sb.write_string('\t'.repeat(total))
+	ctx.sb.write_string(if ctx.config.indent_style == .tabs {
+		'\t'.repeat(total)
 	} else {
-		ctx.sb.write_string(' '.repeat(total * ctx.config.indent_width))
-	}
+		' '.repeat(total * ctx.config.indent_width)
+	})
 	ctx.line_start = false
 }
 
@@ -887,9 +890,9 @@ fn is_ptr_lookahead(tokens []Token, i int) bool {
 }
 
 fn is_func_param_ctx(tokens []Token, i int) bool {
-	// Scan forward from i to find the matching ')' at the current paren depth.
-	// Then check if what follows is '{' (function definition) or ';' (function declaration)
-	// AND the paren content looks like a parameter list (type-like).
+	// scan forward from i to find the matching ')' at the current paren depth.
+	// then check if what follows is '{' (function definition) or ';' (function declaration)
+	// and the paren content looks like a parameter list (type-like).
 	mut rparen_idx := -1
 	mut depth := 0
 	for j := i + 1; j < tokens.len; j++ {
@@ -904,7 +907,7 @@ fn is_func_param_ctx(tokens []Token, i int) bool {
 		}
 	}
 	if rparen_idx == -1 { return false }
-	// Find the matching '(' for this context by scanning backward
+	// find the matching '(' for this context by scanning backward
 	mut lparen_idx := -1
 	depth = 0
 	for j := i; j >= 0; j-- {
@@ -919,16 +922,17 @@ fn is_func_param_ctx(tokens []Token, i int) bool {
 		}
 	}
 	if lparen_idx == -1 { return false }
-	// Check what follows the ')'
+	// check what follows the ')'
 	mut tok_after := TokenType.eof
 	for k := rparen_idx + 1; k < tokens.len; k++ {
-		if tokens[k].typ == .newline { continue
-		 }
+		if tokens[k].typ == .newline {
+			continue
+		}
 		tok_after = tokens[k].typ
 		break
 	}
 	if tok_after !in [TokenType.lbrace, TokenType.semicolon] { return false }
-	// Verify paren content is type-like (not an expression)
+	// verify paren content is type-like (not an expression)
 	return is_type_like_paren(tokens, lparen_idx)
 }
 
