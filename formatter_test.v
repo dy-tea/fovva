@@ -710,7 +710,7 @@ fn test_string_not_broken_by_line_breaker() {
 			i++
 		}
 		if in_str {
-			assert false, 'line has unbalanced quotes: \'${line}\''
+			assert false, "line has unbalanced quotes: '${line}'"
 		}
 	}
 }
@@ -728,7 +728,7 @@ fn test_comment_long_lines_preserve_syntax() {
 		if line.len > 0 {
 			trimmed := line.trim_space()
 			if trimmed.len > 0 && !trimmed.starts_with('//') {
-				assert false, 'comment continuation missing //: \'${line}\''
+				assert false, "comment continuation missing //: '${line}'"
 			}
 		}
 	}
@@ -1013,7 +1013,7 @@ fn test_macro_continuation_not_broken() {
 			continue
 		}
 		if line.len > cfg.max_line_len {
-			assert false, 'line too long: \'${line}\' (${line.len})'
+			assert false, "line too long: '${line}' (${line.len})"
 		}
 	}
 }
@@ -1041,4 +1041,15 @@ fn test_init_brace_macro_call_no_split() {
 	expected := 'static const entry_t table[] = {\n\tENTRY2("focus", "west", BIND_FOCUS_WEST),\n\tENTRY2("focus", "south", BIND_FOCUS_SOUTH),\n\tENTRY("node", "-t", "tiled", BIND_NODE_STATE_TILED),\n\tENTRY("node", "--state", "floating", BIND_NODE_STATE_FLOATING),\n\tENTRY1("quit", BIND_QUIT),\n};\n'
 	result := format(input)
 	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+}
+
+fn test_ifdef_no_newline() {
+	input := '#ifdef DEBUG
+static void some_function() {
+	printf("Hello World\\n");
+}
+#endif
+'
+	result := format(input)
+	assert result == input, 'got:\n${result}\nexpected:\n${input}'
 }

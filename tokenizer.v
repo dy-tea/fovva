@@ -378,17 +378,17 @@ pub fn tokenize(source string) []Token {
 
 		typ := match c {
 			`{` { TokenType.lbrace }
-			`}` { .rbrace }
-			`(` { .lparen }
-			`)` { .rparen }
-			`[` { .lbracket }
-			`]` { .rbracket }
-			`;` { .semicolon }
-			`,` { .comma }
-			`.` { .dot }
-			`:` { .colon }
-			`?` { .question }
-			else { .operator }
+			`}` { TokenType.rbrace }
+			`(` { TokenType.lparen }
+			`)` { TokenType.rparen }
+			`[` { TokenType.lbracket }
+			`]` { TokenType.rbracket }
+			`;` { TokenType.semicolon }
+			`,` { TokenType.comma }
+			`.` { TokenType.dot }
+			`:` { TokenType.colon }
+			`?` { TokenType.question }
+			else { TokenType.operator }
 		}
 		tokens << Token{typ, c.ascii_str(), line, col}
 		pos++

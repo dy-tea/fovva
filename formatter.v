@@ -281,6 +281,7 @@ fn (mut ctx FormatContext) run() {
 			}
 
 			nop := ctx.peek(i)
+			next_tok := ctx.peek_token(i)
 			if nop == .semicolon || nop == .comma || nop == .number || nop == .rparen {
 				ctx.line_start = false
 			} else if nop == .identifier && is_struct {
@@ -298,7 +299,7 @@ fn (mut ctx FormatContext) run() {
 				|| nop == .lparen || nop == .lbracket {
 				ctx.sb.write_string(' ')
 				ctx.line_start = false
-			} else if ctx.indent_lvl == 0 && ctx.brace_depth == 0 && nop != .eof {
+			} else if ctx.indent_lvl == 0 && ctx.brace_depth == 0 && nop != .eof && !is_pp_attach_directive(next_tok) {
 				ctx.sb.write_string('\n\n')
 				ctx.line_start = true
 				ctx.wrote_blank_line = true
@@ -324,13 +325,14 @@ fn (mut ctx FormatContext) run() {
 				ctx.sb.write_string(' ')
 			} else {
 				nop := ctx.peek(i)
+				next_tok := ctx.peek_token(i)
 				immediate_is_nl := i + 1 < ctx.tokens.len && ctx.tokens[i + 1].typ == .newline
 				if nop == .line_comment && !immediate_is_nl {
 					ctx.line_start = false
 				} else {
 					mut sep := '\n'
 					if ctx.prev_tok.typ == .rbrace && ctx.indent_lvl == 0 && ctx.brace_depth == 0
-						&& nop != .eof && !ctx.inline_init_rbrace {
+						&& nop != .eof && !ctx.inline_init_rbrace && !is_pp_attach_directive(next_tok) {
 						sep = '\n\n'
 						ctx.wrote_blank_line = true
 					}
@@ -511,9 +513,13 @@ fn (mut ctx FormatContext) run() {
 				&& ctx.prev_tok.typ != .operator && ctx.prev_tok.typ != .lparen
 			in_struct := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
 			is_func_ptr :=
-				ctx.prev_tok.typ in [.identifier, .kw_void, .kw_char, .kw_int, .kw_float, .kw_double, .kw_long, .kw_short, .kw_signed, .kw_unsigned]
-				&& (ctx.brace_depth == 0 || in_struct) && ctx.prev_prev_tok.typ !in [.arrow, .dot]
-				&& ctx.peek(i) == .operator
+				ctx.prev_tok.typ in [.identifier, .kw_void, .kw_char, .kw_int, .kw_float, .kw_double,
+					.kw_long, .kw_short, .kw_signed, .kw_unsigned]
+					&& (ctx.brace_depth == 0 || in_struct) && ctx.prev_prev_tok.typ !in [
+					.arrow,
+					.dot,
+				]
+					&& ctx.peek(i) == .operator
 			if ctx.line_start {
 				ctx.write_indent()
 				if is_func_ptr {
@@ -524,7 +530,8 @@ fn (mut ctx FormatContext) run() {
 			}
 			outer_cast := ctx.paren_cast.len > 0 && ctx.paren_cast[ctx.paren_cast.len - 1]
 			mut is_cast := (outer_cast && ctx.prev_tok.typ != .kw_sizeof)
-				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow, .lbracket, .rbracket, .rparen, .kw_return, .kw_case, .kw_default]
+				|| ctx.prev_tok.typ in [.operator, .lparen, .comma, .colon, .question, .dot, .arrow,
+					.lbracket, .rbracket, .rparen, .kw_return, .kw_case, .kw_default]
 			if is_cast && !is_type_like_paren(ctx.tokens, i) {
 				is_cast = false
 			}
@@ -575,7 +582,7 @@ fn (mut ctx FormatContext) run() {
 			at_init_pd := ctx.init_brace_pd.len > 0 && ctx.paren_depth == ctx.init_brace_pd.last()
 			write_newline :=
 				(ctx.brace_depth > 0 && in_init_brace && ctx.inline_init_depth == 0 && at_init_pd)
-				|| (in_enum_brace && ctx.paren_depth == 0)
+					|| (in_enum_brace && ctx.paren_depth == 0)
 			if write_newline {
 				ctx.sb.write_string('\n')
 				ctx.line_start = true
@@ -660,15 +667,22 @@ fn (mut ctx FormatContext) run() {
 			is_binary := is_binary_op(tok.value)
 			can_be_unary := tok.value in ['*', '&', '+', '-', '~', '!']
 			is_struct_star := tok.value == '*' && ctx.prev_tok.typ == .identifier
-				&& (ctx.next_is_struct || (ctx.id_at_line_start && ctx.peek(i) in [.identifier, .rparen, .rbracket, .kw_const, .kw_volatile]
-				&& (ctx.paren_depth == 0 || ctx.peek(i) != .identifier)))
+				&& (ctx.next_is_struct || (ctx.id_at_line_start && ctx.peek(i) in [
+					.identifier,
+					.rparen,
+					.rbracket,
+					.kw_const,
+					.kw_volatile,
+				]
+					&& (ctx.paren_depth == 0 || ctx.peek(i) != .identifier)))
 			is_ptr_dec := tok.value in ['*', '&'] && ctx.prev_tok.typ == .identifier
 				&& !is_struct_star && is_ptr_lookahead(ctx.tokens, i)
 			nop := ctx.peek(i)
 			mut next_val := ''
 			for j in i + 1 .. ctx.tokens.len {
-				if ctx.tokens[j].typ == .newline { continue
-				 }
+				if ctx.tokens[j].typ == .newline {
+					continue
+				}
 				next_val = ctx.tokens[j].value
 				break
 			}
@@ -678,12 +692,12 @@ fn (mut ctx FormatContext) run() {
 			in_struct_decl := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
 			is_ptr_param := tok.value == '*' && is_word_type(ctx.prev_tok.typ) && (in_struct_decl
 				|| (ctx.brace_depth == 0 && (ctx.paren_depth == 0
-				|| is_func_param_ctx(ctx.tokens, i))))
+					|| is_func_param_ctx(ctx.tokens, i))))
 				&& nop in [.identifier, .kw_const, .kw_volatile, .operator]
 			always_unary := tok.value in ['!', '~']
 			space_before_always_unary := always_unary && !ctx.line_start
 				&& !(ctx.prev_tok.typ in [.lparen, .lbracket]
-				|| (ctx.prev_tok.typ == .operator && !is_binary_op(ctx.prev_tok.value)))
+					|| (ctx.prev_tok.typ == .operator && !is_binary_op(ctx.prev_tok.value)))
 			space_before := !ctx.line_start && !(ctx.prev_tok.typ == .operator
 				&& !is_binary_op(ctx.prev_tok.value) && can_be_unary) && !(can_be_unary
 				&& is_unary_prefix_ctx(ctx.prev_tok.typ)) && !is_cast_rparen
@@ -757,7 +771,7 @@ fn (mut ctx FormatContext) run() {
 		ctx.id_at_line_start = tok.typ == .identifier && (was_line_start
 			|| ctx.prev_tok.typ in [.kw_static, .kw_extern, .kw_typedef, .kw_const, .kw_volatile]
 			|| (ctx.prev_tok.typ == .lparen
-			&& ctx.prev_prev_tok.typ !in [.kw_if, .kw_while, .kw_for, .kw_switch, .rparen])
+				&& ctx.prev_prev_tok.typ !in [.kw_if, .kw_while, .kw_for, .kw_switch, .rparen])
 			|| (ctx.prev_tok.typ == .comma && ctx.paren_depth > 0))
 		ctx.line_start = false
 		ctx.advance(tok)
@@ -781,6 +795,38 @@ fn (ctx &FormatContext) peek(i int) TokenType {
 		}
 	}
 	return .eof
+}
+
+fn (ctx &FormatContext) peek_token(i int) Token {
+	for j in i + 1 .. ctx.tokens.len {
+		if ctx.tokens[j].typ != .newline {
+			return ctx.tokens[j]
+		}
+	}
+	return Token{.eof, '', 0, 0}
+}
+
+fn pp_directive_keyword(val string) string {
+	mut s := val.trim_space()
+	if s.starts_with('#') {
+		s = s[1..].trim_space()
+	}
+	mut kw := ''
+	for c in s {
+		if c == ` ` || c == `\t` {
+			break
+		}
+		kw += c.ascii_str()
+	}
+	return kw
+}
+
+fn is_pp_attach_directive(tok Token) bool {
+	if tok.typ != .pp_other {
+		return false
+	}
+	kw := pp_directive_keyword(tok.value)
+	return kw in ['elif', 'else', 'endif']
 }
 
 fn (mut ctx FormatContext) pp_tok(tok Token, _ int) bool {
