@@ -13,7 +13,7 @@ fn test_format_basic_if_else() {
 	}'
 	expected := 'void f(void) {\n\tif (condition1) {\n\t\tdo_thing1();\n\t}\n\tif (condition2) {\n\t\tdo_thing2();\n\t} else {\n\t\tdo_thing3();\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_indentation() {
@@ -31,7 +31,7 @@ fn test_format_nested_blocks() {
 	}}}'
 	expected := 'void f(void) {\n\tif (a) {\n\t\tif (b) {\n\t\t\tx();\n\t\t}\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_switch_case() {
@@ -46,7 +46,7 @@ fn test_format_switch_case() {
 	}'
 	expected := 'int main(void) {\n\tswitch (x) {\n\tcase 1:\n\t\tdo_thing();\n\t\tbreak;\n\tdefault:\n\t\tdo_default();\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_spaces_indent() {
@@ -59,7 +59,7 @@ fn test_format_spaces_indent() {
 	}
 	result := format(input, cfg)
 	expected := 'void f(void) {\n    return 0;\n}\n'
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_for_loop() {
@@ -68,7 +68,7 @@ fn test_format_for_loop() {
 	work();}}'
 	expected := 'void f(void) {\n\tfor (i = 0; i < 10; i++) {\n\t\twork();\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_line_breaking() {
@@ -131,7 +131,7 @@ bool minimize_to_scratchpad = false;
 bool realtime_scheduling = false;
 '
 	result := format(input)
-	assert result == input, 'got:\n${result}\nexpected:\n${input}'
+	assert result == input
 }
 
 fn test_format_empty_input() {
@@ -145,7 +145,7 @@ fn test_format_return_statement() {
 	}'
 	expected := 'int f(void) {\n\treturn 42;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_multiple_functions() {
@@ -157,7 +157,7 @@ fn test_format_multiple_functions() {
 	}'
 	expected := 'void a(void) {\n\tx();\n}\n\nvoid b(void) {\n\ty();\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_do_while() {
@@ -168,7 +168,7 @@ fn test_format_do_while() {
 	}'
 	expected := 'void f(void) {\n\tdo {\n\t\tx();\n\t} while (cond);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_else_if() {
@@ -183,7 +183,7 @@ fn test_format_else_if() {
 	}}'
 	expected := 'void f(void) {\n\tif (a) {\n\t\tx();\n\t} else if (b) {\n\t\ty();\n\t} else {\n\t\tz();\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_struct_init() {
@@ -201,7 +201,7 @@ fn test_format_struct_init() {
 	}'
 	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nint main() {\n\tS s = {};\n\tS ss = {\n\t\t1,\n\t\t2\n\t};\n\tS sss = {\n\t\t.a = 1,\n\t\t.b = 2\n\t};\n\n\treturn 0;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_format_struct_cast() {
@@ -215,7 +215,7 @@ fn test_format_struct_cast() {
 	};'
 	expected := 'struct S {\n\tint a;\n\tint b;\n};\n\nS src = (struct S){\n\t.a = 0xa,\n\t.b = 0xb,\n};\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_pointer_basic() {
@@ -231,7 +231,7 @@ fn test_pointer_basic() {
 	}'
 	expected := 'void f(void) {\n\tint *p = NULL;\n\tint **pp;\n\t*p = 42;\n\tint x = a * b;\n\tint y = a & b;\n\tint *q = &x;\n\tf(&x, &y);\n\treturn *p;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_pointer_advanced() {
@@ -244,7 +244,7 @@ fn test_pointer_advanced() {
 	}'
 	expected := 'void f(void) {\n\tstruct foo *p = NULL;\n\tT *q = NULL;\n\tsizeof(*p);\n\tvoid *ptr;\n\tsize_t s = sizeof(*p);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_pointer_params() {
@@ -257,7 +257,7 @@ fn test_pointer_params() {
 	}'
 	expected := 'void update(struct wlr_surface *sans) {\n\tbool *flag;\n\tint _unused_x, _unused_y;\n\tif (sans != surface && wlr_scene_node_coords(&tree->node, &_unused_x)) {\n\t\tinhibited = true;\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_pointer_typedef() {
@@ -268,7 +268,7 @@ fn test_pointer_typedef() {
 	}'
 	expected := 'void handle_destroy(struct wl_listener *listener, void *data) {\n\t(void)data;\n\tMyType *idle = container_of(listener, idle, member);\n\tfree(idle);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_pointer_return_addr() {
@@ -281,7 +281,7 @@ fn test_pointer_return_addr() {
 	}'
 	expected := 'int *f(int *p) {\n\treturn p;\n}\n\nint *g(int *p) {\n\tint *q = &x;\n\treturn &x;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_if_without_braces() {
@@ -290,7 +290,7 @@ fn test_if_without_braces() {
 	}'
 	expected := 'void f(void) {\n\tif (cond)\n\t\tstmt;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_if_else_without_braces() {
@@ -299,7 +299,7 @@ fn test_if_else_without_braces() {
 	}'
 	expected := 'void f(void) {\n\tif (cond)\n\t\tstmt;\n\telse\n\t\tstmt2;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_else_if_naked() {
@@ -308,7 +308,7 @@ fn test_else_if_naked() {
 	}'
 	expected := 'void f(void) {\n\tif (a)\n\t\tstmt;\n\telse if (b)\n\t\tstmt2;\n\telse\n\t\tstmt3;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_while_without_braces() {
@@ -317,7 +317,7 @@ fn test_while_without_braces() {
 	}'
 	expected := 'void f(void) {\n\twhile (cond)\n\t\tstmt;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_for_without_braces() {
@@ -326,7 +326,7 @@ fn test_for_without_braces() {
 	}'
 	expected := 'void f(void) {\n\tfor (; ; )\n\t\tstmt;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_nested_if_without_braces() {
@@ -335,7 +335,7 @@ fn test_nested_if_without_braces() {
 	}'
 	expected := 'void f(void) {\n\tif (a)\n\t\tif (b)\n\t\t\tstmt;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_unary_operators() {
@@ -348,7 +348,7 @@ fn test_unary_operators() {
 	}'
 	expected := 'int f(void) {\n\treturn -1;\n\tint x = -y;\n\tint z = +1;\n\tint w = a - b;\n\tint v = a + -b;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_macro_body_indent() {
@@ -359,7 +359,7 @@ fn test_macro_body_indent() {
 	}'
 	expected := 'void f(void) {\n\twl_list_for_each(entry, &list, link)\n\t\tif (cond)\n\t\t\tstmt;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_static_ptr_decl() {
@@ -369,7 +369,7 @@ fn test_static_ptr_decl() {
 	void g(struct S *s) {}'
 	expected := 'static mytype *q = NULL;\nvoid f(mytype *p) {} mytype *r;\nvoid g(struct S *s) {}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_ternary_basic() {
@@ -378,7 +378,7 @@ fn test_ternary_basic() {
 	}'
 	expected := 'void f(void) {\n\tint x = a ? b : c;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_ternary_complex() {
@@ -390,7 +390,7 @@ fn test_ternary_complex() {
 	}'
 	expected := 'int g(void) {\n\tint x = something() ? something() : 0;\n\tint y = a ? &b : NULL;\n\tint z = a ? *b : NULL;\n\tint w = a ? b ? c : d : e;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_comma_lparen() {
@@ -400,7 +400,7 @@ fn test_comma_lparen() {
 	}'
 	expected := 'void f(void) {\n\tprintf("%d %s", x, (void *)ptr);\n\tfunc(a, (int)b);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_inline_comment_after_semicolon() {
@@ -414,7 +414,7 @@ fn test_inline_comment_after_semicolon() {
 	}'
 	expected := 'void do_something(int *val) {\n\t*val = 12;\n}\n\nint main() {\n\tint a = 100;\n\tdo_something(&a); // inline comment explaining this\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_inline_comment_after_return() {
@@ -424,7 +424,7 @@ fn test_inline_comment_after_return() {
 	}'
 	expected := 'void f(void) {\n\tx = 1; // trailing comment\n\treturn; // return comment\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_standalone_line_comment() {
@@ -434,7 +434,7 @@ fn test_standalone_line_comment() {
 	}'
 	expected := 'void f(void) {\n\t// standalone comment at block start\n\tint x = 1;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_cast_arithmetic() {
@@ -444,7 +444,7 @@ fn test_cast_arithmetic() {
 	}'
 	expected := 'void f(void) {\n\tcurve->baked[i].x = (float)(b0 * p0x + b1 * p1x);\n\tfloat t = (float)((x - x0) / (x1 - x0));\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_cast_mult_after_rparen() {
@@ -453,7 +453,7 @@ fn test_cast_mult_after_rparen() {
 	}'
 	expected := 'void f(void) {\n\tfloat x = (float)(a) * 16;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_unary_at_line_start() {
@@ -466,7 +466,7 @@ fn test_unary_at_line_start() {
 	}'
 	expected := 'void f(void) {\n\tif (cond)\n\t\t*val = 12;\n}\n\nvoid g(void) {\n\t*val = 42;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_control_flow_mult() {
@@ -478,7 +478,7 @@ fn test_control_flow_mult() {
 	}'
 	expected := 'void f(void) {\n\twhile (a * b) {\n\t\tbody();\n\t}\n\tif (a * b) {\n\t\tbody();\n\t}\n\tfor (a * b; ; ) {\n\t\tbody();\n\t}\n\tint x = a * b;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_typedef_struct_brace() {
@@ -488,7 +488,7 @@ fn test_typedef_struct_brace() {
 } foo;'
 	expected := 'typedef struct {\n\tchar strings[64];\n\tsize_t count;\n} foo;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_struct_comma_decl_no_split() {
@@ -500,7 +500,7 @@ fn test_struct_comma_decl_no_split() {
 } bezier_curve_t;'
 	expected := 'typedef struct bezier_curve_t {\n\tdouble p1x, p1y, p2x, p2y;\n\tstruct {\n\t\tfloat x, y;\n\t} baked;\n} bezier_curve_t;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_typedef_union_brace() {
@@ -510,14 +510,14 @@ fn test_typedef_union_brace() {
 } bar;'
 	expected := 'typedef union {\n\tint i;\n\tfloat f;\n} bar;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_typedef_enum_brace() {
 	input := 'typedef enum { A, B } myenum;'
 	expected := 'typedef enum {\n\tA,\n\tB\n} myenum;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_enum_trailing_comma() {
@@ -526,7 +526,7 @@ fn test_enum_trailing_comma() {
 } myenum;'
 	expected := 'typedef enum {\n\tA,\n\tB,\n} myenum;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_inline_init_zero() {
@@ -535,7 +535,7 @@ fn test_inline_init_zero() {
 	}'
 	expected := 'void f(void) {\n\tint arr[] = {0};\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_inline_init_null() {
@@ -544,7 +544,7 @@ fn test_inline_init_null() {
 	}'
 	expected := 'void f(void) {\n\tchar *s = {NULL};\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_multi_element_init_expands() {
@@ -553,7 +553,7 @@ fn test_multi_element_init_expands() {
 	}'
 	expected := 'void f(void) {\n\tint arr[] = {\n\t\t0,\n\t\t1\n\t};\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_comment_between_structs() {
@@ -568,7 +568,7 @@ fn test_comment_between_structs() {
 	}'
 	expected := 'struct Struct {\n\tint a;\n\tint b;\n}\n\n// comment about AnotherStruct\nstruct AnotherStruct {\n\tint b;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_compound_literal_expansion() {
@@ -577,7 +577,7 @@ fn test_compound_literal_expansion() {
 	}'
 	expected := 'void f(void) {\n\tfunc(arg, &(struct S){\n\t\t.x = 1,\n\t\t.y = 2\n\t});\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_macro_loop_body() {
@@ -586,7 +586,7 @@ fn test_macro_loop_body() {
 	}'
 	expected := 'void f(void) {\n\tMACRO(item, &list, link)\n\t\tstmt(arg);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_nested_for_without_braces() {
@@ -599,7 +599,7 @@ fn test_nested_for_without_braces() {
 '
 	expected := 'static void tabs_rebuild_all(void) {\n\tfor (output_t *m = mon_head; m; m = m->next)\n\t\tfor (desktop_t *d = m->desk; d; d = d->next)\n\t\t\tif (d->root)\n\t\t\t\ttabs_rebuild(d->root);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_switch_case_braced() {
@@ -613,7 +613,7 @@ fn test_switch_case_braced() {
 '
 	expected := 'switch (12) {\ncase 12: {\n\tint a = 12;\n}\ndefault:\n\tbreak;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_braced_case_followed_by_another_case() {
@@ -632,7 +632,7 @@ fn test_braced_case_followed_by_another_case() {
 }'
 	expected := 'void f(void) {\n\tswitch (x) {\n\tcase A:\n\t\treturn 1;\n\tcase B: {\n\t\tdo_thing();\n\t}\n\tcase C:\n\t\treturn 3;\n\tdefault:\n\t\treturn 0;\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_braced_case_nested_block() {
@@ -649,7 +649,7 @@ fn test_braced_case_nested_block() {
 }'
 	expected := 'void f(void) {\n\tswitch (x) {\n\tcase A: {\n\t\tif (cond) {\n\t\t\tinner();\n\t\t}\n\t}\n\tcase B:\n\t\treturn 2;\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_switch_case_indent() {
@@ -670,7 +670,7 @@ case DECORATION_CSD:
 '
 	expected := 'switch (decoration_mode) {\ncase DECORATION_NONE:\n\tmode_str = "none\\n";\n\tbreak;\ncase DECORATION_TABS:\n\tmode_str = "tabs\\n";\n\tbreak;\ncase DECORATION_ALWAYS:\n\tmode_str = "always\\n";\n\tbreak;\ncase DECORATION_CSD:\n\tmode_str = "csd\\n";\n\tbreak;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_struct_array_init() {
@@ -685,7 +685,7 @@ fn test_struct_array_init() {
 '
 	expected := 'static const tab_cfg_t tab_colors[] = {\n\t{"bar_bg", color_bar_bg},\n\t{"bg", color_tab_bg},\n\t{"bg_active", color_tab_bg_active},\n\t{"text", color_tab_text},\n\t{"text_active", color_tab_text_active},\n\t{"sep", color_tab_sep},\n};\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_string_not_broken_by_line_breaker() {
@@ -738,35 +738,35 @@ fn test_binary_and_spacing() {
 	input := 'if (!(mask&WL_EVENT_READABLE))return 0;'
 	expected := 'if (!(mask & WL_EVENT_READABLE))\n\treturn 0;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_post_decrement_assignment() {
 	input := "*end--='\\0';"
 	expected := "*end-- = '\\0';\n"
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_cast_sizeof_no_space() {
 	input := 'offset < (int)sizeof(pending_command) - 1;'
 	expected := 'offset < (int)sizeof(pending_command) - 1;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_for_null_body_indent() {
 	input := 'void f(void) {for (;;);}'
 	expected := 'void f(void) {\n\tfor (; ; )\n\t\t;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_cast_rparen_unary_op() {
 	input := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);'
 	expected := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_fn_arg_mult_after_comma() {
@@ -775,14 +775,14 @@ fn test_fn_arg_mult_after_comma() {
 	}'
 	expected := 'void f(void) {\n\twl_event_source_timer_update(idle_timer, idle_timeout * 1000);\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_nested_init_brace_indent() {
 	input := 'Foo arr[2] = {{.sType = A,.stage = B,},{.sType = C,.stage = D,},};'
 	expected := 'Foo arr[2] = {\n\t{\n\t\t.sType = A,\n\t\t.stage = B,\n\t},\n\t{\n\t\t.sType = C,\n\t\t.stage = D,\n\t},\n};\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_statement_after_block() {
@@ -797,7 +797,7 @@ fn test_statement_after_block() {
 '
 	expected := 'void f(void) {\n\tif (cond) {\n\t\tbody();\n\t}\n\tif (val < min)\n\t\tval = min;\n\tif (val > max)\n\t\tval = max;\n}\n\n*var = val;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_compound_literal_operator() {
@@ -807,7 +807,7 @@ fn test_compound_literal_operator() {
 '
 	expected := 'void f(void) {\n\tint *p = (struct S){\n\t\t.x = 1\n\t} + 5;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_comment_after_semicolon_separate_line() {
@@ -820,7 +820,7 @@ fn test_comment_after_semicolon_separate_line() {
 '
 	expected := 'void f(void) {\n\tint x = 1;\n\n\t// comment on its own line\n\tint y = 2;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_last_was_cast_leak_into_struct() {
@@ -835,7 +835,7 @@ typedef struct {
 } foo_t;'
 	expected := 'typedef enum {\n\tX = 1,\n\tY = (1 << 2),\n} mask_t;\n\ntypedef struct {\n\tint a;\n\tint *b, *c;\n} foo_t;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_block_comment_standalone() {
@@ -843,14 +843,14 @@ fn test_block_comment_standalone() {
 bool process_ipc_message(char *msg, int client_fd);'
 	expected := '/* Returns true when the command takes ownership of client_fd. */\nbool process_ipc_message(char *msg, int client_fd);\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_trailing_line_comment_same_line() {
 	input := 'extern int focus_on_activate; // focus_on_activate_mode_t'
 	expected := 'extern int focus_on_activate; // focus_on_activate_mode_t\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_for_semicolon_ptr_no_double_space() {
@@ -859,28 +859,28 @@ fn test_for_semicolon_ptr_no_double_space() {
 		count++;"
 	expected := "for (char *p = value; *p; p++)\n\tif (*p == ',')\n\t\tcount++;\n"
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_unary_not_after_colon() {
 	input := 'n->hidden = has_value ? set_value : !n->hidden;'
 	expected := 'n->hidden = has_value ? set_value : !n->hidden;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_unary_not_after_question() {
 	input := 'x = a ? !b : c;'
 	expected := 'x = a ? !b : c;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_unary_not_after_equals() {
 	input := 'x = !y;'
 	expected := 'x = !y;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_struct_decl_after_enum_with_cast() {
@@ -893,7 +893,7 @@ typedef struct {
 } foo_t;'
 	expected := 'typedef enum {\n\tX = (1 << 0),\n} mask_t;\n\ntypedef struct {\n\tint *a, *b;\n} foo_t;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_adjacent_string_literals_separate_lines() {
@@ -903,7 +903,7 @@ fn test_adjacent_string_literals_separate_lines() {
 	"  }");'
 	expected := 'f("  {\\n"\n\t"    \\"name\\": \\"%s\\",\\n"\n\t"  }");\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_label_no_space_before_colon() {
@@ -914,7 +914,7 @@ end:
 }'
 	expected := 'void f(void) {\n\tgoto end;\nend:\n\treturn;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_line_comment_on_own_line_after_label() {
@@ -925,69 +925,69 @@ somelabel:
 }'
 	expected := 'void f(void) {\nsomelabel:\n\t// comment\n\tdo_thing();\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_cast_int_lit_struct_ptr() {
 	input := 'struct A {};int*p=(A*)1;'
 	expected := 'struct A {};\n\nint *p = (A *)1;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_stmt_after_label() {
 	input := 'void f(void) {\nlabel:\n\tint a = 10;\n}\n'
 	result := format(input)
-	assert result == input, 'got:\n${result}\nexpected:\n${input}'
+	assert result == input
 }
 
 fn test_label_indent() {
 	input := 'void main(void){int a = 10;goto is_a;if(a){is_a:a = 12;}}'
 	expected := 'void main(void) {\n\tint a = 10;\n\tgoto is_a;\n\tif (a) {\n\tis_a:\n\t\ta = 12;\n\t}\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_expr_paren_not_cast() {
 	input := 'double dist_right = (rect.x + rect.width) - lx;'
 	expected := 'double dist_right = (rect.x + rect.width) - lx;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_mult_in_parens() {
 	input := 'double dist = sqrt(dx * dx + dy * dy);'
 	expected := 'double dist = sqrt(dx * dx + dy * dy);\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_cast_rparen_preserved() {
 	input := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);'
 	expected := 'destroy_fbo((GLuint *)&state->ping.native_handle[0], (GLuint *)&state->ping.native_handle[1]);\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_ptr_ptr_decl() {
 	input := 'void test() { node_t **new_nodes = something(); }'
 	expected := 'void test() {\n\tnode_t **new_nodes = something();\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_func_decl_ptr_param() {
 	input := 'int somefn(A *a, A *b);'
 	expected := 'int somefn(A *a, A *b);\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_func_def_ptr_param() {
 	input := 'void f(A *a, A *b) { return; }'
 	expected := 'void f(A *a, A *b) {\n\treturn;\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_ternary_colon_cast_space() {
@@ -997,7 +997,7 @@ fn test_ternary_colon_cast_space() {
 }'
 	expected := 'void f(void) {\n\tfbo0 = ping ? (GLuint)state->pong.native_handle[0] : (GLuint)state->ping.native_handle[0];\n\ttex0 = ping ? (GLuint)state->pong.native_handle[1] : (GLuint)state->ping.native_handle[1];\n}\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_macro_continuation_not_broken() {
@@ -1026,7 +1026,7 @@ fn test_macro_continuation_preserved() {
 '
 	expected := 'void f(void) {\n\tint x = 1;\n}\n\n#define FOO \\\n\tbar; \\\n\tbaz; \\\n\tqux;\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_init_brace_macro_call_no_split() {
@@ -1040,7 +1040,7 @@ fn test_init_brace_macro_call_no_split() {
 '
 	expected := 'static const entry_t table[] = {\n\tENTRY2("focus", "west", BIND_FOCUS_WEST),\n\tENTRY2("focus", "south", BIND_FOCUS_SOUTH),\n\tENTRY("node", "-t", "tiled", BIND_NODE_STATE_TILED),\n\tENTRY("node", "--state", "floating", BIND_NODE_STATE_FLOATING),\n\tENTRY1("quit", BIND_QUIT),\n};\n'
 	result := format(input)
-	assert result == expected, 'got:\n${result}\nexpected:\n${expected}'
+	assert result == expected
 }
 
 fn test_ifdef_no_newline() {
@@ -1051,5 +1051,19 @@ static void some_function() {
 #endif
 '
 	result := format(input)
-	assert result == input, 'got:\n${result}\nexpected:\n${input}'
+	assert result == input
+}
+
+fn test_cast_type_minus_one() {
+	input := 'typedef enum {
+	VAL1,
+	VAL2
+} val_t;
+
+val_t somefn() {
+	return (val_t)-1;
+}
+'
+	result := format(input)
+	assert result == input
 }

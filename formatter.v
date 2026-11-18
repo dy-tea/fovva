@@ -18,7 +18,9 @@ mut:
 	prev_newline       bool
 	skip_rbrace        bool
 	paren_cast         []bool
+	paren_cast_type    []bool
 	last_cast_paren    bool
+	last_cast_type     bool
 	next_is_struct     bool
 	next_is_enum       bool
 	struct_brace       []bool
@@ -536,6 +538,7 @@ fn (mut ctx FormatContext) run() {
 				is_cast = false
 			}
 			ctx.paren_cast << is_cast
+			ctx.paren_cast_type << (is_cast && is_definite_type_paren(ctx.tokens, i))
 			ctx.paren_func_call << (ctx.prev_tok.typ == .identifier)
 			ctx.sb.write_string('(')
 			ctx.paren_depth++
@@ -567,6 +570,10 @@ fn (mut ctx FormatContext) run() {
 			if ctx.paren_cast.len > 0 {
 				ctx.last_cast_paren = ctx.paren_cast[ctx.paren_cast.len - 1]
 				ctx.paren_cast = ctx.paren_cast[..ctx.paren_cast.len - 1]
+			}
+			if ctx.paren_cast_type.len > 0 {
+				ctx.last_cast_type = ctx.paren_cast_type[ctx.paren_cast_type.len - 1]
+				ctx.paren_cast_type = ctx.paren_cast_type[..ctx.paren_cast_type.len - 1]
 			}
 			ctx.last_was_cast = ctx.last_cast_paren
 			ctx.line_start = false
@@ -688,7 +695,7 @@ fn (mut ctx FormatContext) run() {
 			}
 			is_ptr_ptr := tok.value == '*' && nop == .operator && next_val == '*'
 			is_cast_rparen := ctx.last_was_cast && ctx.prev_tok.typ == .rparen && can_be_unary
-				&& nop !in [.number, .string_lit, .char_lit]
+				&& (nop !in [.number, .string_lit, .char_lit] || ctx.last_cast_type)
 			in_struct_decl := ctx.struct_brace.len > 0 && ctx.struct_brace.last()
 			is_ptr_param := tok.value == '*' && is_word_type(ctx.prev_tok.typ) && (in_struct_decl
 				|| (ctx.brace_depth == 0 && (ctx.paren_depth == 0
@@ -878,6 +885,39 @@ fn is_unary_prefix_ctx(prev TokenType) bool {
 
 fn is_unary_op_ctx(prev TokenType) bool {
 	return prev !in [.identifier, .rparen, .rbracket, .rbrace, .number, .string_lit, .char_lit]
+}
+
+fn is_definite_type_paren(tokens []Token, i int) bool {
+	mut depth := 1
+	for j := i + 1; j < tokens.len; j++ {
+		t := tokens[j]
+		if t.typ == .newline || t.typ == .line_comment || t.typ == .block_comment {
+			continue
+		}
+		if t.typ == .lparen {
+			depth++
+			continue
+		}
+		if t.typ == .rparen {
+			depth--
+			if depth == 0 {
+				break
+			}
+			continue
+		}
+		if t.typ == .kw_struct || t.typ == .kw_union || t.typ == .kw_enum || t.typ == .kw_void
+			|| t.typ == .kw_char || t.typ == .kw_int || t.typ == .kw_short || t.typ == .kw_long
+			|| t.typ == .kw_float || t.typ == .kw_double || t.typ == .kw_signed
+			|| t.typ == .kw_unsigned || t.typ == .kw_const || t.typ == .kw_volatile
+			|| t.typ == .kw_auto || t.typ == .kw_register {
+			return true
+		}
+		if t.typ == .identifier && (t.value.contains('_')
+			|| (t.value.len > 0 && t.value[0] >= `A` && t.value[0] <= `Z`)) {
+			return true
+		}
+	}
+	return false
 }
 
 fn is_type_like_paren(tokens []Token, i int) bool {
